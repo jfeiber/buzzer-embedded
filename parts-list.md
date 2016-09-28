@@ -45,5 +45,13 @@ So 110MB is used phoning home (220 * 5 * 5 *20) and 20MB is used on initial setu
 [Sample Arduino Project]: https://github.com/ladislas/Bare-Arduino-Project
 [Cell+GPS Arduino]: https://learn.adafruit.com/adafruit-fona-808-cellular-plus-gps-shield-for-arduino
 [Ting Rates]: https://ting.com/rates?ab=1
+[OLED Display Driver]: https://github.com/adafruit/Adafruit_SSD1306/blob/master/Adafruit_SSD1306.cpp
+[Graphics Primitive Library]: https://github.com/adafruit/Adafruit-GFX-Library/blob/master/Adafruit_GFX.cpp
+[Smaller Arduino to move to later]: https://www.adafruit.com/products/2000
+[OLED i2c display instructable]: http://www.instructables.com/id/Monochrome-096-i2c-OLED-display-with-arduino-SSD13/step3/Libraries/
+[OLED instructable]: http://www.instructables.com/id/How-to-use-OLED-display-arduino-module/step7/Upload-code-done/
+[Thin OLED]: https://www.adafruit.com/products/931
+[Mini Cell Modem (No GPS)]: https://www.adafruit.com/products/2542
+[i2c/arduino intro]: http://tronixstuff.com/2010/10/20/tutorial-arduino-and-the-i2c-bus/
 
 
