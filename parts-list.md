@@ -25,7 +25,13 @@ GET Request from the unit to the server: ~220 bytes
 Response from server to unit: ~320 bytes
 POST request from the unit to the server: ~220 bytes
 POST acknowledge from the server to the unit: ~250 bytes (assuming that the ack from the server is something small)
- 
+
+Let's assume a typical buzzer at a restaurant gets used 5 times a day and the restaurant uses buzzers 5 days a week, and the average customer wait time is 20 minutes. Let's also assume that when the buzzer isn't in the hands of customers it uses a negligible amount of data. 
+
+Let's also assume that the buzzer phones home every minute it is active (220 bytes) and that the initial setup and cleanup takes an additional 800 bytes (~1 GET and a POST w/ response)
+
+So 110MB is used phoning home (220 * 5 * 5 *20) and 20MB is used on initial setup and cleanup (800 * 5 * 5), which is a total of 130MB a week. That's 6.76GB a year per puck (assuming your average restaurant never takes a week off). Given the above data pricing of 1 cent a MB (this is for a normal consumer plan, if we were to get a custom business plan I would imagine it would be much cheaper), the yearly data cost for a puck is $67.60. 
+
 
 #Random Forum Posts that Could be Helpfuler
 [POST AT Command]: http://stackoverflow.com/questions/33346425/sim800-at-command-post-data-to-server
