@@ -53,5 +53,20 @@ So 110MB is used phoning home (220 * 5 * 5 *20) and 20MB is used on initial setu
 [Thin OLED]: https://www.adafruit.com/products/931
 [Mini Cell Modem (No GPS)]: https://www.adafruit.com/products/2542
 [i2c/arduino intro]: http://tronixstuff.com/2010/10/20/tutorial-arduino-and-the-i2c-bus/
+[Arduino Vibrating Motor]: https://www.precisionmicrodrives.com/tech-blog/2016/05/16/how-drive-vibration-motor-arduino-and-genuino
+[Accelerometer]: https://www.adafruit.com/products/2019
+
+#Pins
+Assuming Uno
+
+Oled Display: A4, A5 (i2c)
+Cell Modem: D2 (Rx), D3 (Tx), D4 (RST)
+Vibrating Motor: D6 (hooked to n-type transistor)
+
+Accel: A4, A5 (i2c devices can apparently be hooked up in series, they have unique addresses. Might have to use pull-down resistors)
+Button: Probably any digital pin
+
+
+
 
 
