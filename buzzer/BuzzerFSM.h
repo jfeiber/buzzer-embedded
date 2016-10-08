@@ -4,17 +4,19 @@
 struct State {
   int next_state_success;
   int next_state_failure;
-  int (*state_func)(int);
+  int (*state_func)(unsigned long, int);
 };
 
-enum state_ids {SETUP, OTHERSTATE};
-enum ret_vals {SUCCESS, FAILURE, REPEAT};
+enum state_ids {INIT, BUZZER_ON, BUZZER_OFF};
+enum ret_vals {SUCCESS, FAILURE};
 
 class BuzzerFSM {
   private:
-    int _elapsed_time_in_curr_state = 0;
+    unsigned long _state_start_time = 0;
+    int _num_iterations_in_state = 0;
     int _curr_state_id;
-    State states[SETUP];
+    int NEW_STATE = 0;
+    State _states[INIT];
     int DoState();
     void TransitionToNextState(int do_state_ret_val);
   public:
