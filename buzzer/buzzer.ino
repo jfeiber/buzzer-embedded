@@ -19,6 +19,10 @@ void setup() {
 void loop() {
   // Serial.println("hallo");
   // buzzer_fsm.ProcessState();
-  fona_shield.Init();
-  Serial.println("Done setting up");
+  bool init_res = fona_shield.Init();
+  if (init_res) {
+    Serial.println("Successfully configured FONA");
+  } else {
+    Serial.println("Could not configure FONA");
+  }
 }
