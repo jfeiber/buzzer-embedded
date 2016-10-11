@@ -5,7 +5,9 @@
 
 typedef const __FlashStringHelper * FlashStrPtr;
 
-static const char _expected_init_res[] PROGMEM = "AT\rOK\r";
+
+// 4154DDA4F4BDA
+static const char _expected_init_res[] PROGMEM = {'A', 'T', '\r', '\r', 0xA, 'O', 'K', '\r', 0xA, '\0'};
 
 class FonaShield {
   private:
@@ -19,7 +21,7 @@ class FonaShield {
     void SendATCommand(FlashStrPtr command);
   public:
     FonaShield(SoftwareSerial *fona_serial, int rst_pin);
-    void Init();
+    bool Init();
 };
 
 #endif
