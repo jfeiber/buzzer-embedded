@@ -5,23 +5,27 @@
 
 typedef const __FlashStringHelper * FlashStrPtr;
 
+static const char _expected_ok_res[] PROGMEM = {'\r', 0xA, 'O', 'K', '\r', 0xA, '\0'};
 
-// 4154DDA4F4BDA
-static const char _expected_init_res[] PROGMEM = {'A', 'T', '\r', '\r', 0xA, 'O', 'K', '\r', 0xA, '\0'};
+#define _baud_rate 4800
+#define _max_line_length 256
+#define _max_init_retires 5
+#define APN "wholesale"
+
+typedef char PROGMEM 	prog_char;
 
 class FonaShield {
   private:
     SoftwareSerial *_fona_serial;
-    int _max_line_length = 256;
     int _rst_pin;
-    int _baud_rate = 4800;
-    // const char * PROGMEM progMem_string = "1";
-    void ReadLine(char *buffer, int buffer_len);
-    void ResetShield();
-    void SendATCommand(FlashStrPtr command);
+    bool readAvailBytesFromSerial(char *buffer, int buffer_len);
+    void resetShield();
+    void sendATCommand(FlashStrPtr command);
+    bool sendATCommandCheckReply(FlashStrPtr command, FlashStrPtr expected_reply);
+    bool checkATCommandReply(FlashStrPtr expected_reply);
   public:
     FonaShield(SoftwareSerial *fona_serial, int rst_pin);
-    bool Init();
+    bool initShield();
 };
 
 #endif
