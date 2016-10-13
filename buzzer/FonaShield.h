@@ -18,14 +18,15 @@ class FonaShield {
   private:
     SoftwareSerial *_fona_serial;
     int _rst_pin;
-    bool readAvailBytesFromSerial(char *buffer, int buffer_len);
+    bool readAvailBytesFromSerial(char *buffer, int buffer_len, unsigned long timeout = 100);
     void resetShield();
     void sendATCommand(FlashStrPtr command);
-    bool sendATCommandCheckReply(FlashStrPtr command, FlashStrPtr expected_reply);
-    bool checkATCommandReply(FlashStrPtr expected_reply);
+    bool sendATCommandCheckReply(FlashStrPtr command, FlashStrPtr expected_reply, unsigned long timeout = 100);
+    bool checkATCommandReply(FlashStrPtr expected_reply, unsigned long timeout = 100);
   public:
     FonaShield(SoftwareSerial *fona_serial, int rst_pin);
     bool initShield();
+    bool enableGPRS();
 };
 
 #endif

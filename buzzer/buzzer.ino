@@ -14,15 +14,19 @@ void setup() {
   // pinMode(BUZZER_PIN, OUTPUT);
   // buzzer_fsm.AddState({BUZZER_OFF, BUZZER_ON, BuzzerOnFunc}, BUZZER_ON);
   // buzzer_fsm.AddState({INIT, INIT, BuzzerOffFunc}, BUZZER_OFF);
+  if (fona_shield.initShield()) {
+    Serial.println("Successfully configured FONA");
+  } else {
+    Serial.println("FONA not configured.");
+  }
+  if (fona_shield.enableGPRS()) {
+    Serial.println("Successfully configed GPRS");
+  } else {
+    Serial.println("Nope");
+  }
 }
 
 void loop() {
   // Serial.println("hallo");
   // buzzer_fsm.ProcessState();
-  bool init_res = fona_shield.initShield();
-  if (init_res) {
-    Serial.println("Successfully configured FONA");
-  } else {
-    Serial.println("FONA not configured.");
-  }
 }
