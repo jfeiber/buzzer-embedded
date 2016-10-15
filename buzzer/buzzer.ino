@@ -24,6 +24,10 @@ void setup() {
   } else {
     Serial.println("Nope");
   }
+  char buf[256];
+  fona_shield.HTTPGETOneLine(F("http://restaur-anteater.herokuapp.com/sample_json"), buf, sizeof(buf));
+  Serial.print("Got reply: ");
+  Serial.println(buf);
 }
 
 void loop() {
