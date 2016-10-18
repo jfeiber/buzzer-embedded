@@ -36,17 +36,49 @@ bool FonaShield::enableGPRS() {
   return true;
 }
 
-bool FonaShield::HTTPGETOneLine(FlashStrPtr URL, char *http_res_buffer, int http_res_buffer_len) {
-  bool failed = false;
-  if (!HTTPInit(URL)) return HTTPFail();
-  if (!sendATCommandCheckReply(F("AT+HTTPACTION=0"), OK_REPLY)) return HTTPFail();
+bool FonaShield::GetOneLineHTTPRes(char *http_res_buffer, int http_res_buffer_len) {
   char at_res_buffer[_max_line_length];
-  while (sendATCommandCheckReply(F("AT+HTTPREAD"), at_res_buffer, sizeof(at_res_buffer), OK_REPLY, 5000));
+  while(sendATCommandCheckReply(F("AT+HTTPREAD"), at_res_buffer, sizeof(at_res_buffer), OK_REPLY, 1000));
   int status = getHTTPStatusFromRes(at_res_buffer);
   if (status != 200) return HTTPFail();
   sendATCommand(F("AT+HTTPREAD"));
   readAvailBytesFromSerial(at_res_buffer, sizeof(at_res_buffer), 1000);
   if (!getOneLineHTTPReplyFromRes(at_res_buffer, sizeof(at_res_buffer), http_res_buffer, http_res_buffer_len)) return HTTPFail();
+  return true;
+}
+
+bool FonaShield::HTTPPOSTOneLine(FlashStrPtr URL, char *post_data_buffer, int post_data_buffer_len,
+                                 char *http_res_buffer, int http_res_buffer_len) {
+  if (!HTTPInit(URL)) return HTTPFail();
+  if (!setHTTPParam(F("CONTENT"), F("application/json"))) return HTTPFail();
+  if (!sendHTTPDataCheckReply(post_data_buffer, post_data_buffer_len)) return HTTPFail();
+  if (!sendATCommandCheckReply(F("AT+HTTPACTION=1"), OK_REPLY)) return HTTPFail();
+  if (!GetOneLineHTTPRes(http_res_buffer, http_res_buffer_len)) return HTTPFail();
+  return !HTTPFail();
+}
+
+bool FonaShield::sendHTTPDataCheckReply(char *post_data_buffer, int post_data_buffer_len) {
+  char buf[_max_line_length];
+  sprintf_P(buf, (prog_char *)F("AT+HTTPDATA=%d,5000"), post_data_buffer_len);
+  DEBUG_PRINT_FLASH("Sent: ");
+  DEBUG_PRINTLN(buf);
+  _fona_serial->println(buf);
+  readAvailBytesFromSerial(buf, sizeof(buf), 2000);
+  if (!isEqual(buf, F(NEW_LINE_BYTES "DOWNLOAD" NEW_LINE_BYTES))) return false;
+  _fona_serial->println(post_data_buffer);
+  delay(5001);
+  readAvailBytesFromSerial(buf, sizeof(buf), 2000);
+  return isEqual(buf, OK_REPLY);
+}
+
+bool FonaShield::setHTTPParam(FlashStrPtr param_name, FlashStrPtr param_val) {
+  return sendATCommandParamCheckReply(F("AT+HTTPPARA="), param_name, param_val, OK_REPLY);
+}
+
+bool FonaShield::HTTPGETOneLine(FlashStrPtr URL, char *http_res_buffer, int http_res_buffer_len) {
+  if (!HTTPInit(URL)) return HTTPFail();
+  if (!sendATCommandCheckReply(F("AT+HTTPACTION=0"), OK_REPLY)) return HTTPFail();
+  if (!GetOneLineHTTPRes(http_res_buffer, http_res_buffer_len)) return HTTPFail();
   return !HTTPFail();
 }
 
@@ -58,7 +90,8 @@ bool FonaShield::HTTPFail() {
 bool FonaShield::HTTPInit(FlashStrPtr URL) {
   if (!sendATCommandCheckAck(F("AT+HTTPTERM"), 500)) return false;
   if (!sendATCommandCheckReply(F("AT+HTTPINIT"), OK_REPLY)) return false;
-  if (!sendATCommandParamCheckReply(F("AT+HTTPPARA=\"URL\","), URL, OK_REPLY)) return false;
+  if (!setHTTPParam(F("CID"), F("1"))) return false;
+  if (!setHTTPParam(F("URL"), URL)) return false;
   return true;
 }
 
@@ -91,10 +124,13 @@ bool FonaShield::sendATCommandCheckReply(FlashStrPtr command, FlashStrPtr expect
   return checkATCommandReply(expected_reply, timeout);
 }
 
-bool FonaShield::sendATCommandParamCheckReply(FlashStrPtr command, FlashStrPtr param, FlashStrPtr expected_reply, unsigned long timeout) {
-  sendATCommand(command, false);
+bool FonaShield::sendATCommandParamCheckReply(FlashStrPtr at_command, FlashStrPtr param_name, FlashStrPtr param_val, FlashStrPtr expected_reply, unsigned long timeout) {
+  sendATCommand(at_command, false);
   sendATCommand(F("\""), false);
-  sendATCommand(param, false);
+  sendATCommand(param_name, false);
+  sendATCommand(F("\","), false);
+  sendATCommand(F("\""), false);
+  sendATCommand(param_val, false);
   sendATCommand(F("\""));
   return checkATCommandReply(expected_reply, timeout);
 }
