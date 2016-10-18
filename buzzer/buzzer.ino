@@ -24,10 +24,15 @@ void setup() {
   } else {
     Serial.println("Nope");
   }
-  char buf[256];
-  fona_shield.HTTPGETOneLine(F("http://restaur-anteater.herokuapp.com/sample_json"), buf, sizeof(buf));
+  // char buf[256];
+  // fona_shield.HTTPGETOneLine(F("http://restaur-anteater.herokuapp.com/sample_json"), buf, sizeof(buf));
+  // Serial.print("Got reply: ");
+  // Serial.println(buf);
+  char buf[] = "{test: \"testing 1 2 3\"}";
+  char buf1[256];
+  fona_shield.HTTPPOSTOneLine(F("http://restaur-anteater.herokuapp.com/sample_json"), buf, sizeof(buf), buf1, sizeof(buf1));
   Serial.print("Got reply: ");
-  Serial.println(buf);
+  Serial.println(buf1);
 }
 
 void loop() {
