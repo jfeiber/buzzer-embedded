@@ -27,7 +27,7 @@ class FonaShield {
     void resetShield();
     void sendATCommand(FlashStrPtr command, bool use_newline = true);
     bool sendATCommandCheckReply(FlashStrPtr command, FlashStrPtr expected_reply, unsigned long timeout = 50);
-    bool sendATCommandParamCheckReply(FlashStrPtr command, FlashStrPtr param, FlashStrPtr expected_reply, unsigned long timeout = 50);
+    bool sendATCommandParamCheckReply(FlashStrPtr at_command, FlashStrPtr param_name, FlashStrPtr param_val, FlashStrPtr expected_reply, unsigned long timeout = 50);
     bool sendATCommandCheckReply(FlashStrPtr command, char *buffer, int buffer_len, FlashStrPtr expected_reply, unsigned long timeout = 50);
     bool sendATCommandCheckAck(FlashStrPtr command, unsigned long timeout = 50);
     bool checkATCommandReply(FlashStrPtr expected_reply, unsigned long timeout);
@@ -37,11 +37,16 @@ class FonaShield {
     bool getOneLineHTTPReplyFromRes(char *at_res_buffer, int at_res_buffer_len, char *http_res_buffer, int http_res_buffer_len);
     bool HTTPInit(FlashStrPtr URL);
     bool HTTPFail();
+    bool setHTTPParam(FlashStrPtr param_name, FlashStrPtr param_val);
+    bool sendHTTPDataCheckReply(char *post_data_buffer, int post_data_buffer_len);
+    bool GetOneLineHTTPRes(char *http_res_buffer, int http_res_buffer_len);
   public:
     FonaShield(SoftwareSerial *fona_serial, int rst_pin);
     bool initShield();
     bool enableGPRS();
     bool HTTPGETOneLine(FlashStrPtr URL, char *http_res_buffer, int http_res_buffer_len);
+    bool HTTPPOSTOneLine(FlashStrPtr URL, char *post_data_buffer, int post_data_buffer_len,
+                         char *http_res_buffer, int http_res_buffer_len);
 };
 
 #endif
