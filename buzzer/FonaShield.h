@@ -12,6 +12,12 @@ typedef const __FlashStringHelper * FlashStrPtr;
 #define NEW_LINE_BYTES "\r\xA"
 #define OK_REPLY F(NEW_LINE_BYTES "OK" NEW_LINE_BYTES)
 
+#define SUCCESS 1
+#define ERROR !SUCCESS
+#define TIMEOUT 2
+
+#define HTTP_TIMEOUT 20000 //ms
+
 #define DEBUG_PRINT_FLASH(str) Serial.print(F(str))
 #define DEBUG_PRINTLN_FLASH(str) Serial.println(F(str))
 #define DEBUG_PRINT(str) Serial.print(str)
@@ -36,16 +42,16 @@ class FonaShield {
     int isEqual(char *buf1, FlashStrPtr buf2);
     bool getOneLineHTTPReplyFromRes(char *at_res_buffer, int at_res_buffer_len, char *http_res_buffer, int http_res_buffer_len);
     bool HTTPInit(FlashStrPtr URL);
-    bool HTTPFail();
+    int HTTPFail();
     bool setHTTPParam(FlashStrPtr param_name, FlashStrPtr param_val);
     bool sendHTTPDataCheckReply(char *post_data_buffer, int post_data_buffer_len);
-    bool GetOneLineHTTPRes(char *http_res_buffer, int http_res_buffer_len);
+    int GetOneLineHTTPRes(char *http_res_buffer, int http_res_buffer_len);
   public:
     FonaShield(SoftwareSerial *fona_serial, int rst_pin);
     bool initShield();
     bool enableGPRS();
-    bool HTTPGETOneLine(FlashStrPtr URL, char *http_res_buffer, int http_res_buffer_len);
-    bool HTTPPOSTOneLine(FlashStrPtr URL, char *post_data_buffer, int post_data_buffer_len,
+    int HTTPGETOneLine(FlashStrPtr URL, char *http_res_buffer, int http_res_buffer_len);
+    int HTTPPOSTOneLine(FlashStrPtr URL, char *post_data_buffer, int post_data_buffer_len,
                          char *http_res_buffer, int http_res_buffer_len);
 };
 
