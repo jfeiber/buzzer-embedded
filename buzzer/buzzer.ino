@@ -1,71 +1,42 @@
-#include <SoftwareSerial.h>
-#include "BuzzerFSM.h"
 #include "BuzzerFSMCallbacks.h"
-#include "FonaShield.h"
+#include "Globals.h"
 #include "Pins.h"
+#include "EEPROMReadWrite.h"
+#include <EEPROM.h>
 
-BuzzerFSM buzzer_fsm({BUZZER_ON, BUZZER_ON, InitFunc}, INIT);
+BuzzerFSM buzzer_fsm({INIT_FONA, INIT, INIT, InitFunc}, INIT);
 SoftwareSerial fona_serial = SoftwareSerial(FONA_TX_PIN, FONA_RX_PIN);
 FonaShield fona_shield(&fona_serial, FONA_RST_PIN);
+SSD1306AsciiAvrI2c oled;
+char buzzer_name_global[30];
+
+void ClearEEPROM() {
+  for (int i=0; i<EEPROM.length(); i++) {
+    EEPROM.write(i, 0);
+  }
+}
 
 void setup() {
   Serial.begin(115200);
+  // ClearEEPROM();
   pinMode(FONA_RST_PIN, OUTPUT);
-  // pinMode(BUZZER_PIN, OUTPUT);
-  // buzzer_fsm.AddState({BUZZER_OFF, BUZZER_ON, BuzzerOnFunc}, BUZZER_ON);
-  // buzzer_fsm.AddState({INIT, INIT, BuzzerOffFunc}, BUZZER_OFF);
-  if (fona_shield.initShield()) {
-    Serial.println("Successfully configed FONA");
-    if (fona_shield.enableGPRS()) {
-      Serial.println("Successfully configed GPRS");
-      char buf[256];
-      fona_shield.HTTPGETOneLine(F("http://restaur-anteater.herokuapp.com/sample_json"), buf, sizeof(buf));
-      Serial.print("Got reply: ");
-      Serial.println(buf);
-    } else {
-      Serial.println("Nope");
-    }
-  } else {
-    Serial.println("FONA not configured.");
-  }
-  // char buf[] = "{test: \"testing 1 2 3\"}";
-  // char buf1[256];
-  // fona_shield.HTTPPOSTOneLine(F("http://restaur-anteater.herokuapp.com/sample_json"), buf, sizeof(buf), buf1, sizeof(buf1));
-  // Serial.print("Got reply: ");
-  // Serial.println(buf1);
+  DEBUG_PRINTLN_FLASH("Attempting to init display");
+  oled.begin(&Adafruit128x32, I2C_ADDRESS);
+  oled.setFont(Adafruit5x7);
+  DEBUG_PRINTLN_FLASH("Display successfully initialized");
+  pinMode(BUZZER_PIN, OUTPUT);
+  EEPROMRead(buzzer_name_global, sizeof(buzzer_name_global));
+  Serial.print("Stored in eeprom: ");
+  Serial.println(buzzer_name_global);
+  //TODO: there needs to be a "catastrophic" error state to go into
+  buzzer_fsm.AddState({INIT_GPRS, INIT, INIT, InitFonaShieldFunc}, INIT_FONA);
+  int init_gprs_next_state = IDLE;
+  if (strlen(buzzer_name_global) == 0) init_gprs_next_state = GET_BUZZER_NAME;
+  buzzer_fsm.AddState({init_gprs_next_state, INIT, INIT, InitGPRSFunc}, INIT_GPRS);
+  buzzer_fsm.AddState({IDLE, INIT, INIT, GetBuzzerNameFunc}, GET_BUZZER_NAME);
+  buzzer_fsm.AddState({INIT, INIT, INIT, IdleFunc}, IDLE);
 }
 
 void loop() {
-  // Serial.println("hallo");
-  // buzzer_fsm.ProcessState();
+  buzzer_fsm.ProcessState();
 }
-// // Simple I2C test for 128x32 oled.
-// // Use smaller faster AvrI2c class in place of Wire.
-// //
-// #include "SSD1306Ascii.h"
-// #include "SSD1306AsciiAvrI2c.h"
-//
-// // 0X3C+SA0 - 0x3C or 0x3D
-// #define I2C_ADDRESS 0x3C
-//
-// SSD1306AsciiAvrI2c oled;
-//
-// //------------------------------------------------------------------------------
-// void setup() {
-//
-//   oled.begin(&Adafruit128x32, I2C_ADDRESS);
-//   oled.setFont(Adafruit5x7);
-//
-//   oled.clear();
-//   oled.set2X();
-//   oled.println("Joshuaabcdasdfasdf");
-//   oled.println("10 mins");
-//   oled.setScroll(true);
-// }
-// //------------------------------------------------------------------------------
-// void loop() {
-//   delay(5000);
-//   oled.setContrast(0);
-//   delay(5000);
-//   oled.setContrast(255);
-// }
