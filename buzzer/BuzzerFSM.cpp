@@ -1,5 +1,6 @@
-#include "BuzzerFSM.h"
 #include <Arduino.h>
+#include "BuzzerFSM.h"
+#include "Globals.h"
 
 BuzzerFSM::BuzzerFSM(State initial_state, int initial_state_id): _curr_state_id(initial_state_id) {
   _states[initial_state_id] = initial_state;
@@ -13,7 +14,8 @@ int BuzzerFSM::DoState() {
 void BuzzerFSM::TransitionToNextState(int do_state_ret_val) {
   int prev_state = _curr_state_id;
   if (do_state_ret_val == SUCCESS) _curr_state_id = _states[_curr_state_id].next_state_success;
-  if (do_state_ret_val == FAILURE) _curr_state_id = _states[_curr_state_id].next_state_failure;
+  if (do_state_ret_val == ERROR) _curr_state_id = _states[_curr_state_id].next_state_failure;
+  if (do_state_ret_val == TIMEOUT) _curr_state_id = _states[_curr_state_id].next_state_timeout;
   if (prev_state == _curr_state_id) {
         _num_iterations_in_state++;
   } else {
