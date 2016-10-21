@@ -2,28 +2,18 @@
 #define FONASHIELD_H
 
 #include <SoftwareSerial.h>
+#include "Macros.h"
 
 typedef const __FlashStringHelper * FlashStrPtr;
 
 #define _baud_rate 4800
-#define _max_line_length 256
-#define _max_init_retires 5
 #define APN "wholesale"
 #define NEW_LINE_BYTES "\r\xA"
 #define OK_REPLY F(NEW_LINE_BYTES "OK" NEW_LINE_BYTES)
 
-#define SUCCESS 1
-#define ERROR !SUCCESS
-#define TIMEOUT 2
-
 #define HTTP_TIMEOUT 20000 //ms
 
-#define DEBUG_PRINT_FLASH(str) Serial.print(F(str))
-#define DEBUG_PRINTLN_FLASH(str) Serial.println(F(str))
-#define DEBUG_PRINT(str) Serial.print(str)
-#define DEBUG_PRINTLN(str) Serial.println(str)
-
-typedef char PROGMEM 	prog_char;
+typedef char PROGMEM prog_char;
 
 class FonaShield {
   private:
