@@ -9,6 +9,7 @@ SoftwareSerial fona_serial = SoftwareSerial(FONA_TX_PIN, FONA_RX_PIN);
 FonaShield fona_shield(&fona_serial, FONA_RST_PIN);
 SSD1306AsciiAvrI2c oled;
 char buzzer_name_global[30];
+int party_id;
 
 void ClearEEPROM() {
   for (int i=0; i<EEPROM.length(); i++) {
@@ -21,6 +22,7 @@ void setup() {
   // ClearEEPROM();
   pinMode(FONA_RST_PIN, OUTPUT);
   pinMode(BUTTON_PIN, INPUT);
+  party_id = NO_PARTY;
   DEBUG_PRINTLN_FLASH("Attempting to init display");
   oled.reset(OLED_RST);
   oled.begin(&Adafruit128x32, I2C_ADDRESS);
@@ -38,7 +40,9 @@ void setup() {
   buzzer_fsm.AddState({WAIT_BUZZER_REGISTRATION, INIT, INIT, GetBuzzerNameFunc}, GET_BUZZER_NAME);
   buzzer_fsm.AddState({GET_AVAILABLE_PARTY, INIT, INIT, IdleFunc}, IDLE);
   buzzer_fsm.AddState({IDLE, INIT, INIT, WaitBuzzerRegFunc}, WAIT_BUZZER_REGISTRATION);
-  buzzer_fsm.AddState({IDLE, INIT, INIT, GetAvailPartyFunc}, GET_AVAILABLE_PARTY);
+  buzzer_fsm.AddState({ACCEPT_AVAILABLE_PARTY, IDLE, INIT, GetAvailPartyFunc}, GET_AVAILABLE_PARTY);
+  buzzer_fsm.AddState({HEARTBEAT, INIT, INIT, AcceptAvailPartyFunc}, ACCEPT_AVAILABLE_PARTY);
+  // buzzer_fsm.AddState
 }
 
 void loop() {

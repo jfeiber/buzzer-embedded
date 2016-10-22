@@ -104,8 +104,23 @@ int GetAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_stat
   oled.clear();
   OLED_PRINTLN_FLASH("Checking for parties");
   OLED_PRINTLN_FLASH("with no buzzer");
+  // delay(5000);
+  StaticJsonBuffer<_max_line_length> jsonBuffer;
+  char rep_buf[_max_line_length];
+  FlashStrPtr json_skeleton = F("{\"buzzer_name\":\"\"}");
+  char post_data[strlen_P((prog_char *)json_skeleton)+strlen(buzzer_name_global)+1];
+  Serial.println(strlen_P((prog_char *)json_skeleton));
+  snprintf(post_data, sizeof(post_data), "{\"buzzer_name\":\"%s\"}", buzzer_name_global);
+  //TODO: better error handling
+  fona_shield.HTTPPOSTOneLine(F("http://restaur-anteater.herokuapp.com/buzzer_api/get_available_parties"),
+                              post_data, sizeof(post_data), rep_buf, sizeof(rep_buf));
+  JsonObject& root = jsonBuffer.parseObject(rep_buf);
+  bool party_avail = root["party_avail"];
+  if (party_avail) return SUCCESS;
+  oled.clear();
+  OLED_PRINTLN_FLASH("No avail parties.");
   delay(5000);
-  return SUCCESS;
+  return FAILURE;
 }
 
 int CheckBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_state) {
