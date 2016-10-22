@@ -11,5 +11,8 @@ int InitFonaShieldFunc(unsigned long state_start_time, int num_iterations_in_sta
 int InitGPRSFunc(unsigned long state_start_time, int num_iterations_in_state);
 int GetBuzzerNameFunc(unsigned long state_start_time, int num_iterations_in_state);
 int IdleFunc(unsigned long state_start_time, int num_iterations_in_state);
+int CheckBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_state);
+int WaitBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_state);
+static bool IsBuzzerRegistered();
 
 #endif

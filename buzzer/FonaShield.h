@@ -4,16 +4,12 @@
 #include <SoftwareSerial.h>
 #include "Macros.h"
 
-typedef const __FlashStringHelper * FlashStrPtr;
-
 #define _baud_rate 4800
 #define APN "wholesale"
 #define NEW_LINE_BYTES "\r\xA"
 #define OK_REPLY F(NEW_LINE_BYTES "OK" NEW_LINE_BYTES)
 
 #define HTTP_TIMEOUT 20000 //ms
-
-typedef char PROGMEM prog_char;
 
 class FonaShield {
   private:

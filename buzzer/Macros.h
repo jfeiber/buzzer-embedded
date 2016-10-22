@@ -8,4 +8,7 @@
 
 #define OLED_PRINTLN_FLASH(str) oled.println(F(str))
 
+typedef char PROGMEM prog_char;
+typedef const __FlashStringHelper * FlashStrPtr;
+
 #endif
