@@ -14,5 +14,6 @@ int IdleFunc(unsigned long state_start_time, int num_iterations_in_state);
 int CheckBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_state);
 int WaitBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_state);
 static bool IsBuzzerRegistered();
+int GetAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_state);
 
 #endif

@@ -18,9 +18,11 @@ void ClearEEPROM() {
 
 void setup() {
   Serial.begin(115200);
-  ClearEEPROM();
+  // ClearEEPROM();
   pinMode(FONA_RST_PIN, OUTPUT);
+  pinMode(BUTTON_PIN, INPUT);
   DEBUG_PRINTLN_FLASH("Attempting to init display");
+  oled.reset(OLED_RST);
   oled.begin(&Adafruit128x32, I2C_ADDRESS);
   oled.setFont(Adafruit5x7);
   DEBUG_PRINTLN_FLASH("Display successfully initialized");
@@ -34,8 +36,9 @@ void setup() {
   if (strlen(buzzer_name_global) == 0) init_gprs_next_state = GET_BUZZER_NAME;
   buzzer_fsm.AddState({init_gprs_next_state, INIT, INIT, InitGPRSFunc}, INIT_GPRS);
   buzzer_fsm.AddState({WAIT_BUZZER_REGISTRATION, INIT, INIT, GetBuzzerNameFunc}, GET_BUZZER_NAME);
-  buzzer_fsm.AddState({INIT, INIT, INIT, IdleFunc}, IDLE);
+  buzzer_fsm.AddState({GET_AVAILABLE_PARTY, INIT, INIT, IdleFunc}, IDLE);
   buzzer_fsm.AddState({IDLE, INIT, INIT, WaitBuzzerRegFunc}, WAIT_BUZZER_REGISTRATION);
+  buzzer_fsm.AddState({IDLE, INIT, INIT, GetAvailPartyFunc}, GET_AVAILABLE_PARTY);
 }
 
 void loop() {
