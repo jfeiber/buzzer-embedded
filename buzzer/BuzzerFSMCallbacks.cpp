@@ -3,6 +3,7 @@
 #include "Globals.h"
 #include "Macros.h"
 #include "BuzzerFSM.h"
+#include "Pins.h"
 #include "EEPROMReadWrite.h"
 
 int InitFunc(unsigned long state_start_time, int num_iterations_in_state) {
@@ -79,6 +80,7 @@ int IdleFunc(unsigned long state_start_time, int num_iterations_in_state) {
     oled.println(buzzer_name_global);
   }
   if (millis() - state_start_time >= 20000) oled.setContrast(0);
+  if (digitalRead(BUTTON_PIN) == HIGH) return SUCCESS;
   return REPEAT;
 }
 
@@ -95,6 +97,15 @@ bool IsBuzzerRegistered() {
   JsonObject& root = jsonBuffer.parseObject(rep_buf);
   bool is_buzzer_registered = root["is_buzzer_registered"];
   return is_buzzer_registered;
+}
+
+int GetAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_state) {
+  Serial.println("Attempting to get an available party");
+  oled.clear();
+  OLED_PRINTLN_FLASH("Checking for parties");
+  OLED_PRINTLN_FLASH("with no buzzer");
+  delay(5000);
+  return SUCCESS;
 }
 
 int CheckBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_state) {
