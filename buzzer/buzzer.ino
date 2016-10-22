@@ -18,7 +18,7 @@ void ClearEEPROM() {
 
 void setup() {
   Serial.begin(115200);
-  // ClearEEPROM();
+  ClearEEPROM();
   pinMode(FONA_RST_PIN, OUTPUT);
   DEBUG_PRINTLN_FLASH("Attempting to init display");
   oled.begin(&Adafruit128x32, I2C_ADDRESS);
@@ -30,13 +30,18 @@ void setup() {
   Serial.println(buzzer_name_global);
   //TODO: there needs to be a "catastrophic" error state to go into
   buzzer_fsm.AddState({INIT_GPRS, INIT, INIT, InitFonaShieldFunc}, INIT_FONA);
-  int init_gprs_next_state = IDLE;
+  int init_gprs_next_state = WAIT_BUZZER_REGISTRATION;
   if (strlen(buzzer_name_global) == 0) init_gprs_next_state = GET_BUZZER_NAME;
   buzzer_fsm.AddState({init_gprs_next_state, INIT, INIT, InitGPRSFunc}, INIT_GPRS);
-  buzzer_fsm.AddState({IDLE, INIT, INIT, GetBuzzerNameFunc}, GET_BUZZER_NAME);
+  buzzer_fsm.AddState({WAIT_BUZZER_REGISTRATION, INIT, INIT, GetBuzzerNameFunc}, GET_BUZZER_NAME);
   buzzer_fsm.AddState({INIT, INIT, INIT, IdleFunc}, IDLE);
+  buzzer_fsm.AddState({IDLE, INIT, INIT, WaitBuzzerRegFunc}, WAIT_BUZZER_REGISTRATION);
 }
 
 void loop() {
   buzzer_fsm.ProcessState();
+  extern int __heap_start, *__brkval;
+  int v;
+  DEBUG_PRINTLN_FLASH("FREE RAM: ");
+  Serial.println((int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval));
 }
