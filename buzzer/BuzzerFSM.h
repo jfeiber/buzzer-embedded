@@ -8,7 +8,7 @@ struct State {
   int (*state_func)(unsigned long, int);
 };
 
-enum state_ids {INIT, INIT_FONA, INIT_GPRS, GET_BUZZER_NAME, IDLE};
+enum state_ids {INIT, INIT_FONA, INIT_GPRS, GET_BUZZER_NAME, IDLE, WAIT_BUZZER_REGISTRATION};
 
 #define NEW_STATE 0
 
@@ -17,7 +17,7 @@ class BuzzerFSM {
     unsigned long _state_start_time = 0;
     int _num_iterations_in_state = 0;
     int _curr_state_id;
-    State _states[IDLE];
+    State _states[WAIT_BUZZER_REGISTRATION];
     int DoState();
     void TransitionToNextState(int do_state_ret_val);
   public:
