@@ -9,7 +9,7 @@ struct State {
 };
 
 enum state_ids {INIT, INIT_FONA, INIT_GPRS, GET_BUZZER_NAME, IDLE, WAIT_BUZZER_REGISTRATION,
-                GET_AVAILABLE_PARTY, ACCEPT_AVAILABLE_PARTY};
+                GET_AVAILABLE_PARTY, ACCEPT_AVAILABLE_PARTY, HEARTBEAT, BUZZ};
 
 #define NEW_STATE 0
 
@@ -18,7 +18,7 @@ class BuzzerFSM {
     unsigned long _state_start_time = 0;
     int _num_iterations_in_state = 0;
     int _curr_state_id;
-    State _states[ACCEPT_AVAILABLE_PARTY];
+    State _states[BUZZ];
     int DoState();
     void TransitionToNextState(int do_state_ret_val);
   public:
