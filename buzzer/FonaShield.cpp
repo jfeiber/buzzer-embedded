@@ -63,15 +63,15 @@ int FonaShield::HTTPPOSTOneLine(FlashStrPtr URL, char *post_data_buffer, int pos
 
 bool FonaShield::sendHTTPDataCheckReply(char *post_data_buffer, int post_data_buffer_len) {
   char buf[_max_line_length];
-  sprintf_P(buf, (prog_char *)F("AT+HTTPDATA=%d,5000"), post_data_buffer_len);
+  sprintf_P(buf, (prog_char *)F("AT+HTTPDATA=%d,1000"), post_data_buffer_len);
   DEBUG_PRINT_FLASH("Sent: ");
   DEBUG_PRINTLN(buf);
   _fona_serial->println(buf);
-  readAvailBytesFromSerial(buf, sizeof(buf), 2000);
+  readAvailBytesFromSerial(buf, sizeof(buf), 500);
   if (!isEqual(buf, F(NEW_LINE_BYTES "DOWNLOAD" NEW_LINE_BYTES))) return false;
   _fona_serial->println(post_data_buffer);
-  delay(5001);
-  readAvailBytesFromSerial(buf, sizeof(buf), 2000);
+  // delay(2001);
+  readAvailBytesFromSerial(buf, sizeof(buf), 1000);
   return isEqual(buf, OK_REPLY);
 }
 

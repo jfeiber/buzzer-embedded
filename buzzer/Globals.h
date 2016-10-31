@@ -14,8 +14,12 @@ extern SSD1306AsciiAvrI2c oled;
 enum ret_vals {SUCCESS, ERROR, REPEAT, TIMEOUT};
 //longest length of buzzer name should be around this
 extern char buzzer_name_global[30];
+extern int party_id;
+extern int wait_time;
+extern char party_name[30];
 
 #define MAX_RETRIES 5
-#define _max_line_length 256
+#define _max_line_length 128
+#define NO_PARTY -1
 
 #endif
