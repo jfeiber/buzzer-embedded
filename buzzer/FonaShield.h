@@ -32,6 +32,7 @@ class FonaShield {
     bool setHTTPParam(FlashStrPtr param_name, FlashStrPtr param_val);
     bool sendHTTPDataCheckReply(char *post_data_buffer, int post_data_buffer_len);
     int GetOneLineHTTPRes(char *http_res_buffer, int http_res_buffer_len);
+    bool retryATCommand(FlashStrPtr at_command, FlashStrPtr expected_response);
   public:
     FonaShield(SoftwareSerial *fona_serial, int rst_pin);
     bool initShield();
