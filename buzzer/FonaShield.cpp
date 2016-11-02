@@ -12,7 +12,25 @@ bool FonaShield::initShield() {
 
   resetShield();
 
-  return sendATCommandCheckReply(F("ATE0"), OK_REPLY);
+  if (!retryATCommand(F("AT"), F("AT\xD" NEW_LINE_BYTES "OK" NEW_LINE_BYTES))) {
+    DEBUG_PRINTLN_FLASH("No ack from FONA.");
+    return false;
+  }
+
+  if (!retryATCommand(F("ATE0"), OK_REPLY)) {
+    DEBUG_PRINTLN_FLASH("Could not turn echo off.");
+    return false;
+  }
+  return true;
+}
+
+bool FonaShield::retryATCommand(FlashStrPtr at_command, FlashStrPtr expected_response) {
+  int num_tries = 0;
+  while (num_tries < MAX_RETRIES && !sendATCommandCheckReply(at_command, expected_response)) {
+    delay(500);
+    num_tries++;
+  }
+  return num_tries < MAX_RETRIES;
 }
 
 bool FonaShield::enableGPRS() {
