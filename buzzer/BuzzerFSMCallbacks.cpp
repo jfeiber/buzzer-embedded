@@ -20,7 +20,7 @@ int InitFonaShieldFunc(unsigned long state_start_time, int num_iterations_in_sta
   if (num_iterations_in_state == 0) {
     oled.clear();
     oled.set1X();
-    OLED_PRINTLN_FLASH("Initializing cell modem.....");
+    OLED_PRINTLN_FLASH("Initializing\ncell modem.....");
   }
   DEBUG_PRINTLN_FLASH("Initializing FONA shield.");
   if (num_iterations_in_state >= MAX_RETRIES) {
@@ -58,7 +58,7 @@ int InitGPRSFunc(unsigned long state_start_time, int num_iterations_in_state) {
 }
 
 int GetBuzzerNameFunc(unsigned long state_start_time, int num_iterations_in_state) {
-  Serial.println("Buzzer doesn't yet have name. Attempting to get one.....");
+  DEBUG_PRINTLN_FLASH("Buzzer doesn't yet have name. Attempting to get one.....");
   oled.clear();
   OLED_PRINTLN_FLASH("Getting a name.....");
   StaticJsonBuffer<_max_line_length> jsonBuffer;
@@ -77,6 +77,7 @@ int GetBuzzerNameFunc(unsigned long state_start_time, int num_iterations_in_stat
 int IdleFunc(unsigned long state_start_time, int num_iterations_in_state) {
   if (num_iterations_in_state == 0) {
     oled.clear();
+    OLED_PRINTLN_FLASH("Buzzer name:");
     oled.println(buzzer_name_global);
   }
   if (millis() - state_start_time >= 20000) oled.setContrast(0);
@@ -105,9 +106,21 @@ int APIPOSTBuzzerName(FlashStrPtr api_endpoint, char *rep_buf, int rep_buf_len) 
 
 int HeartbeatFunc(unsigned long state_start_time, int num_iterations_in_state) {
   oled.clear();
+  OLED_PRINTLN_FLASH("Party name:");
   oled.println(party_name);
-  oled.println(wait_time);
-  // delay(5000);
+  OLED_PRINTLN_FLASH("Expected wait time: ");
+  int wait_time_hrs = wait_time/60;
+  int wait_time_min = wait_time - wait_time_hrs*60;
+  int num_digits_hrs = wait_time_hrs < 10 ? NUM_DIGITS(wait_time_hrs) + 1 : NUM_DIGITS(wait_time_hrs);
+  int num_digits_min = wait_time_min < 10 ? NUM_DIGITS(wait_time_min) + 1 : NUM_DIGITS(wait_time_min);
+  DEBUG_PRINTLN(num_digits_hrs);
+  DEBUG_PRINTLN(num_digits_min);
+  DEBUG_PRINTLN(wait_time_min);
+  DEBUG_PRINTLN(wait_time_hrs);
+  char buf[num_digits_min + num_digits_hrs + 4];
+  snprintf(buf, sizeof(buf), "%02dh:%02dm", wait_time_hrs, wait_time_min);
+  oled.println(buf);
+  DEBUG_PRINTLN(buf);
   StaticJsonBuffer<_max_line_length> jsonBuffer;
   char rep_buf[_max_line_length];
  //TODO: better error handling
@@ -123,11 +136,6 @@ int HeartbeatFunc(unsigned long state_start_time, int num_iterations_in_state) {
 }
 
 int AcceptAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_state) {
-  // oled.clear();
-  // oled.println(party_name);
-  // oled.println(wait_time);
-  // oled.println("Found a ")
-  // delay(10000);
   StaticJsonBuffer<_max_line_length> jsonBuffer;
   char rep_buf[_max_line_length];
   FlashStrPtr json_skeleton = F("{\"buzzer_name\":\"\",\"party_id\":\"\"}");
@@ -169,10 +177,14 @@ int GetAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_stat
 int CheckBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_state) {
   Serial.println("Checking if buzzer is registered");
   oled.clear();
-  OLED_PRINTLN_FLASH("Checking to see if this");
-  OLED_PRINTLN_FLASH("buzzer is registered.....");
+  OLED_PRINTLN_FLASH("Checking if this\nbuzzer is registered");
 
-  if (IsBuzzerRegistered()) return SUCCESS;
+  if (IsBuzzerRegistered()) {
+    oled.clear();
+    OLED_PRINTLN_FLASH("Buzzer registered!");
+    delay(2000);
+    return SUCCESS;
+  }
   return ERROR;
 }
 
