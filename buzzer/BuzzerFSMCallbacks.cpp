@@ -81,7 +81,10 @@ int IdleFunc(unsigned long state_start_time, int num_iterations_in_state) {
     oled.println(buzzer_name_global);
   }
   if (millis() - state_start_time >= 20000) oled.setContrast(0);
-  if (digitalRead(BUTTON_PIN) == HIGH) return SUCCESS;
+  if (digitalRead(BUTTON_PIN) == HIGH) {
+    oled.setContrast(255);
+    return SUCCESS;
+  }
   return REPEAT;
 }
 
@@ -99,7 +102,6 @@ int APIPOSTBuzzerName(FlashStrPtr api_endpoint, char *rep_buf, int rep_buf_len) 
   DEBUG_PRINTLN_FLASH("In API POST BUZZER NAME");
   FlashStrPtr json_skeleton = F("{\"buzzer_name\":\"\"}");
   char post_data[strlen_P((prog_char *)json_skeleton)+strlen(buzzer_name_global)+1];
-  Serial.println(strlen_P((prog_char *)json_skeleton));
   snprintf(post_data, sizeof(post_data), "{\"buzzer_name\":\"%s\"}", buzzer_name_global);
   return fona_shield.HTTPPOSTOneLine(api_endpoint, post_data, sizeof(post_data), rep_buf, rep_buf_len);
 }
@@ -175,7 +177,7 @@ int GetAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_stat
 }
 
 int CheckBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_state) {
-  Serial.println("Checking if buzzer is registered");
+  DEBUG_PRINTLN_FLASH("Checking if buzzer is registered");
   oled.clear();
   OLED_PRINTLN_FLASH("Checking if this\nbuzzer is registered");
 
@@ -189,7 +191,7 @@ int CheckBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_sta
 }
 
 int WaitBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_state) {
-  Serial.println("Waiting for the buzzer to be registered.");
+  DEBUG_PRINTLN_FLASH("Waiting for the buzzer to be registered.");
   oled.clear();
   OLED_PRINTLN_FLASH("Please register");
   OLED_PRINTLN_FLASH("buzzer.");
@@ -204,7 +206,7 @@ int WaitBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_stat
 }
 
 int BuzzFunc(unsigned long state_start_time, int num_iterations_in_state) {
-  DEBUG_PRINTLN("IN BUZZ STATE");
+  DEBUG_PRINTLN_FLASH("In buzz state");
   oled.clear();
   OLED_PRINTLN_FLASH("Table Ready!");
   analogWrite(BUZZER_PIN, 255);

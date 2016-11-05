@@ -58,11 +58,15 @@ bool FonaShield::enableGPRS() {
 int FonaShield::GetOneLineHTTPRes(char *http_res_buffer, int http_res_buffer_len) {
   char at_res_buffer[_max_line_length];
   unsigned long start_time = millis();
-  while(sendATCommandCheckReply(F("AT+HTTPREAD"), at_res_buffer, sizeof(at_res_buffer), OK_REPLY, 1000)) {
+  while(sendATCommandCheckReply(F("AT+HTTPREAD"), at_res_buffer, sizeof(at_res_buffer), OK_REPLY, 2000)) {
     if (millis() - start_time > HTTP_TIMEOUT) return TIMEOUT;
+    delay(1000);
   }
   int status = getHTTPStatusFromRes(at_res_buffer);
-  if (status != 200) return HTTPFail();
+  if (status != 200) {
+    DEBUG_PRINTLN_FLASH("Received a response that wasn't 200");
+    return HTTPFail();
+  }
   sendATCommand(F("AT+HTTPREAD"));
   readAvailBytesFromSerial(at_res_buffer, sizeof(at_res_buffer), 1000);
   if (!getOneLineHTTPReplyFromRes(at_res_buffer, sizeof(at_res_buffer), http_res_buffer, http_res_buffer_len)) return HTTPFail();
@@ -188,23 +192,31 @@ void FonaShield::sendATCommand(FlashStrPtr command, bool use_newline) {
 
 bool FonaShield::readAvailBytesFromSerial(char *buffer, int buffer_len, unsigned long timeout) {
   int i=0;
-
   unsigned long last_time_since_bytes = millis();
   int num_lines_read = 0;
+  memset(buffer, 0, buffer_len);
   while (millis() - last_time_since_bytes < timeout) {
     if (_fona_serial->available()) {
       last_time_since_bytes = millis();
       char c = _fona_serial->read();
       buffer[i] = c;
       i++;
-      if (i == buffer_len-1) break;
+      buffer[i] = '\0';
+      if (i == buffer_len-1) {
+        DEBUG_PRINTLN_FLASH("Maxed out buffer passed to readAvailBytesFromSerial");
+        break;
+      }
+    }
+    if (strstr_P(buffer, (prog_char *)F("OK" NEW_LINE_BYTES)) != NULL) {
+      DEBUG_PRINTLN_FLASH("Broke early because I found an OK");
+       break;
     }
   }
-  buffer[i] = '\0';
   DEBUG_PRINT_FLASH("Received: ");
   DEBUG_PRINTLN(buffer);
   return strlen(buffer) != 0;
 }
+
 
 void FonaShield::resetShield() {
   digitalWrite(_rst_pin, HIGH);

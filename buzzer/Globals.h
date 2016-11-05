@@ -19,7 +19,7 @@ extern int wait_time;
 extern char party_name[30];
 
 #define MAX_RETRIES 10
-#define _max_line_length 128
+#define _max_line_length 150
 #define NO_PARTY -1
 
 #endif
