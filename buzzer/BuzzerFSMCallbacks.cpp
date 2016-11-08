@@ -81,7 +81,10 @@ int IdleFunc(unsigned long state_start_time, int num_iterations_in_state) {
     oled.println(buzzer_name_global);
   }
   if (millis() - state_start_time >= 20000) oled.setContrast(0);
-  if (digitalRead(BUTTON_PIN) == HIGH) return SUCCESS;
+  if (digitalRead(BUTTON_PIN) == HIGH) {
+    oled.setContrast(255);
+    return SUCCESS;
+  }
   return REPEAT;
 }
 
