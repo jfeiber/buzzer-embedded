@@ -92,18 +92,18 @@ bool IsBuzzerRegistered() {
   StaticJsonBuffer<_max_line_length> jsonBuffer;
   char rep_buf[_max_line_length];
  //TODO: better error handling
-  APIPOSTBuzzerName(F("http://restaur-anteater.herokuapp.com/buzzer_api/is_buzzer_registered"), rep_buf, sizeof(rep_buf));
+  APIPOSTBuzzerName(F("http://restaur-anteater.herokuapp.com/buzzer_api/is_buzzer_registered"), rep_buf, sizeof(rep_buf), false);
   JsonObject& root = jsonBuffer.parseObject(rep_buf);
   bool is_buzzer_registered = root["is_buzzer_registered"];
   return is_buzzer_registered;
 }
 
-int APIPOSTBuzzerName(FlashStrPtr api_endpoint, char *rep_buf, int rep_buf_len) {
+int APIPOSTBuzzerName(FlashStrPtr api_endpoint, char *rep_buf, int rep_buf_len, bool is_buzzing) {
   DEBUG_PRINTLN_FLASH("In API POST BUZZER NAME");
-  FlashStrPtr json_skeleton = F("{\"buzzer_name\":\"\"}");
+  FlashStrPtr json_skeleton = F("{\"buzzer_name\":\"\",buzzing: 0}");
   char post_data[strlen_P((prog_char *)json_skeleton)+strlen(buzzer_name_global)+1];
   Serial.println(strlen_P((prog_char *)json_skeleton));
-  snprintf(post_data, sizeof(post_data), "{\"buzzer_name\":\"%s\"}", buzzer_name_global);
+  snprintf(post_data, sizeof(post_data), "{\"buzzer_name\":\"%s\",buzzing: %d}", buzzer_name_global, is_buzzing);
   return fona_shield.HTTPPOSTOneLine(api_endpoint, post_data, sizeof(post_data), rep_buf, rep_buf_len);
 }
 
@@ -127,7 +127,7 @@ int HeartbeatFunc(unsigned long state_start_time, int num_iterations_in_state) {
   StaticJsonBuffer<_max_line_length> jsonBuffer;
   char rep_buf[_max_line_length];
  //TODO: better error handling
-  APIPOSTBuzzerName(F("http://restaur-anteater.herokuapp.com/buzzer_api/heartbeat"), rep_buf, sizeof(rep_buf));
+  APIPOSTBuzzerName(F("http://restaur-anteater.herokuapp.com/buzzer_api/heartbeat"), rep_buf, sizeof(rep_buf), false);
   JsonObject& root = jsonBuffer.parseObject(rep_buf);
   if (strcmp(root["status"], "success") != 0) return REPEAT;
   bool is_active = root["is_active"];
@@ -161,7 +161,7 @@ int GetAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_stat
   delay(100);
   StaticJsonBuffer<_max_line_length> jsonBuffer;
   char rep_buf[_max_line_length];
-  APIPOSTBuzzerName(F("http://restaur-anteater.herokuapp.com/buzzer_api/get_available_party"), rep_buf, sizeof(rep_buf));
+  APIPOSTBuzzerName(F("http://restaur-anteater.herokuapp.com/buzzer_api/get_available_party"), rep_buf, sizeof(rep_buf), false);
   JsonObject& root = jsonBuffer.parseObject(rep_buf);
   bool party_avail = root["party_avail"];
   if (party_avail){
@@ -216,7 +216,7 @@ int BuzzFunc(unsigned long state_start_time, int num_iterations_in_state) {
   StaticJsonBuffer<_max_line_length> jsonBuffer;
   char rep_buf[_max_line_length];
  //TODO: better error handling
-  APIPOSTBuzzerName(F("http://restaur-anteater.herokuapp.com/buzzer_api/heartbeat"), rep_buf, sizeof(rep_buf));
+  APIPOSTBuzzerName(F("http://restaur-anteater.herokuapp.com/buzzer_api/heartbeat"), rep_buf, sizeof(rep_buf), true);
   JsonObject& root = jsonBuffer.parseObject(rep_buf);
   bool is_active = root["is_active"];
   if (!is_active) return SUCCESS;

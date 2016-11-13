@@ -15,7 +15,7 @@ int CheckBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_sta
 int WaitBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_state);
 static bool IsBuzzerRegistered();
 int GetAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_state);
-static int APIPOSTBuzzerName(FlashStrPtr api_endpoint, char *rep_buf, int rep_buf_len);
+static int APIPOSTBuzzerName(FlashStrPtr api_endpoint, char *rep_buf, int rep_buf_len, bool is_buzzing);
 int AcceptAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_state);
 int HeartbeatFunc(unsigned long state_start_time, int num_iterations_in_state);
 
