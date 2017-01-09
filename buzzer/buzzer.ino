@@ -21,16 +21,22 @@ void ClearEEPROM() {
 
 void setup() {
   Serial.begin(115200);
+  pinMode(LED_BUILTIN, OUTPUT);
   // ClearEEPROM();
   pinMode(FONA_RST_PIN, OUTPUT);
   pinMode(BUTTON_PIN, INPUT);
+  //enable internal pull up resistor in arduino
+  digitalWrite(BUTTON_PIN, HIGH);
   party_id = NO_PARTY;
   wait_time = NO_PARTY;
   DEBUG_PRINTLN_FLASH("Attempting to init display");
   oled.reset(OLED_RST);
   oled.begin(&Adafruit128x64, I2C_ADDRESS);
   oled.setFont(Adafruit5x7);
-  // oled.setScroll(true);
+  // invert display?
+  // oled.ssd1306WriteCmd(SSD1306_INVERTDISPLAY);
+  oled.ssd1306WriteCmd(SSD1306_SEGREMAP);
+  oled.ssd1306WriteCmd(SSD1306_COMSCANINC);
   DEBUG_PRINTLN_FLASH("Display successfully initialized");
   DEBUG_PRINTLN_FLASH("Making sure buzzer works.");
   pinMode(BUZZER_PIN, OUTPUT);
@@ -42,8 +48,9 @@ void setup() {
   delay(300);
   analogWrite(BUZZER_PIN, 0);
   EEPROMRead(buzzer_name_global, sizeof(buzzer_name_global));
-  Serial.print("Stored in eeprom: ");
-  Serial.println(buzzer_name_global);
+  DEBUG_PRINTLN_FLASH("Stored in eeprom: ");
+  DEBUG_PRINTLN(buzzer_name_global);
+  Serial.println(buzzer_name_global[0], HEX);
   //TODO: there needs to be a "catastrophic" error state to go into
   buzzer_fsm.AddState({INIT_GPRS, INIT, INIT, InitFonaShieldFunc}, INIT_FONA);
   int init_gprs_next_state = CHECK_BUZZER_REGISTRATION;
@@ -61,6 +68,11 @@ void setup() {
 
 void loop() {
   buzzer_fsm.ProcessState();
+  Serial.println("hello");
+  // digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+  // delay(1000);                       // wait for a second
+  // digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
+  // delay(1000);
   // extern int __heap_start, *__brkval;
   // int v;
   // DEBUG_PRINTLN_FLASH("FREE RAM: ");

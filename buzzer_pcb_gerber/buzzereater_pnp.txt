@@ -1,0 +1,34 @@
+*Pick And Place List
+*Company=
+*Author=
+*eMail=
+*
+*Project=buzzereater
+*Date=14:28:27
+*CreatedBy=Fritzing 0.9.3b.04.19.5c895d327c44a3114e5fcc9d8260daf0cbb52806
+*
+*
+*Coordinates in mm, always center of component
+*Origin 0/0=Lower left corner of PCB
+*Rotation in degree (0-360, math. pos.)
+*
+*No;Value;Package;X;Y;Rotation;Side;Name
+1;;THT;19.2346;-16.9067;-90;Bottom;J2
+2;;vibe-motor-10mm;58.0487;-54.2967;-180;Bottom;U1
+3;;300 mil [THT];49.74;-55.0067;180;Bottom;D1
+4;;;62.7937;-26.8437;0;Bottom;Part5
+5;;TO92 [THT];38.4751;-52.5556;180;Bottom;Q1
+6;;;67.5872;-56.6592;0;Bottom;TXT1
+7;;;38.8183;-33.6091;90;Bottom;TXT1
+8;220;THT;20.5046;-27.0667;-90;Bottom;R4
+9;;THT;19.2346;-1.66673;-90;Bottom;J3
+10;;;10.5168;-49.8364;0;Bottom;TXT1
+11;;THT;35.7446;-33.4167;0;Bottom;J1
+12;;;50.6205;-51.7062;0;Bottom;TXT1
+13;;;16.8013;-9.19576;0;Bottom;TXT1
+14;;;68.7413;-49.1374;0;Bottom;TXT1
+15;;;17.5168;-27.584;-90;Bottom;TXT1
+16;;ksa_sealed_tac_switch;21.7746;-49.9267;0;Bottom;S4
+17;;;38.9937;-48.7398;0;Bottom;TXT1
+18;;;63.1414;-12.1432;0;Bottom;TXT1
+19;10k;THT;10.3446;-47.3867;0;Bottom;R3

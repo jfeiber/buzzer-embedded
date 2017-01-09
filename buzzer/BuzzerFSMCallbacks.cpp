@@ -25,7 +25,7 @@ int InitFonaShieldFunc(unsigned long state_start_time, int num_iterations_in_sta
   DEBUG_PRINTLN_FLASH("Initializing FONA shield.");
   if (num_iterations_in_state >= MAX_RETRIES) {
     oled.clear();
-    OLED_PRINTLN_FLASH("Failed to initialize cell modem.");
+    OLED_PRINTLN_FLASH("Failed to initialize\ncell modem.");
     delay(10000);
     return ERROR;
   }
@@ -45,7 +45,7 @@ int InitGPRSFunc(unsigned long state_start_time, int num_iterations_in_state) {
   DEBUG_PRINTLN_FLASH("Attempting to attach to GPRS netowrk");
   if (num_iterations_in_state >= MAX_RETRIES) {
     oled.clear();
-    OLED_PRINTLN_FLASH("Failed to initialize GPRS connection.");
+    OLED_PRINTLN_FLASH("Failed to initialize\nGPRS connection.");
     //TODO: Log network statistics to serial
     delay(10000);
     return ERROR;
@@ -58,7 +58,6 @@ int InitGPRSFunc(unsigned long state_start_time, int num_iterations_in_state) {
 }
 
 int GetBuzzerNameFunc(unsigned long state_start_time, int num_iterations_in_state) {
-  DEBUG_PRINTLN_FLASH("Buzzer doesn't yet have name. Attempting to get one.....");
   oled.clear();
   OLED_PRINTLN_FLASH("Getting a name.....");
   StaticJsonBuffer<_max_line_length> jsonBuffer;
@@ -100,10 +99,10 @@ bool IsBuzzerRegistered() {
 
 int APIPOSTBuzzerName(FlashStrPtr api_endpoint, char *rep_buf, int rep_buf_len, bool is_buzzing) {
   DEBUG_PRINTLN_FLASH("In API POST BUZZER NAME");
-  FlashStrPtr json_skeleton = F("{\"buzzer_name\":\"\",buzzing: 0}");
+  FlashStrPtr json_skeleton = F("{\"buzzer_name\":\"\",\"buzzing\": 0}");
   char post_data[strlen_P((prog_char *)json_skeleton)+strlen(buzzer_name_global)+1];
   Serial.println(strlen_P((prog_char *)json_skeleton));
-  snprintf(post_data, sizeof(post_data), "{\"buzzer_name\":\"%s\",buzzing: %d}", buzzer_name_global, is_buzzing);
+  snprintf(post_data, sizeof(post_data), "{\"buzzer_name\":\"%s\",\"buzzing\": %d}", buzzer_name_global, is_buzzing);
   return fona_shield.HTTPPOSTOneLine(api_endpoint, post_data, sizeof(post_data), rep_buf, rep_buf_len);
 }
 
