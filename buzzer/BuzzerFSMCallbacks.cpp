@@ -87,6 +87,32 @@ int IdleFunc(unsigned long state_start_time, int num_iterations_in_state) {
   return REPEAT;
 }
 
+int ShutdownFunc(unsigned long state_start_time, int num_iterations_in_state) {
+  DEBUG_PRINTLN_FLASH("In the shutdown func.");
+  oled.clear();
+  OLED_PRINTLN_FLASH("Shutting down.\n Bye bye!");
+  delay(5000);
+  oled.clear();
+  return SUCCESS;
+}
+
+int WakeupFunc(unsigned long state_start_time, int num_iterations_in_state) {
+  oled.clear();
+  OLED_PRINTLN_FLASH("Starting up.....");
+  delay(2500);
+  oled.clear();
+  return SUCCESS;
+}
+
+int SleepFunc(unsigned long state_start_time, int num_iterations_in_state) {
+  DEBUG_PRINTLN_FLASH("In sleep func");
+  if (num_iterations_in_state == 0) {
+    oled.clear();
+  }
+  delay(500);
+  return REPEAT;
+}
+
 bool IsBuzzerRegistered() {
   StaticJsonBuffer<_max_line_length> jsonBuffer;
   char rep_buf[_max_line_length];

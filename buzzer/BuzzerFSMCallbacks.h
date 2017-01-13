@@ -18,5 +18,8 @@ int GetAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_stat
 static int APIPOSTBuzzerName(FlashStrPtr api_endpoint, char *rep_buf, int rep_buf_len, bool is_buzzing);
 int AcceptAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_state);
 int HeartbeatFunc(unsigned long state_start_time, int num_iterations_in_state);
+int ShutdownFunc(unsigned long state_start_time, int num_iterations_in_state);
+int SleepFunc(unsigned long state_start_time, int num_iterations_in_state);
+int WakeupFunc(unsigned long state_start_time, int num_iterations_in_state);
 
 #endif

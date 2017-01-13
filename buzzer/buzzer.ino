@@ -64,6 +64,9 @@ void setup() {
   buzzer_fsm.AddState({HEARTBEAT, IDLE, INIT, AcceptAvailPartyFunc}, ACCEPT_AVAILABLE_PARTY);
   buzzer_fsm.AddState({BUZZ, INIT, IDLE, HeartbeatFunc}, HEARTBEAT);
   buzzer_fsm.AddState({IDLE, INIT, BUZZ, BuzzFunc}, BUZZ);
+  buzzer_fsm.AddState({IDLE, INIT, INIT, WakeupFunc}, WAKEUP);
+  buzzer_fsm.AddState({SLEEP, INIT, INIT, ShutdownFunc}, SHUTDOWN);
+  buzzer_fsm.AddState({IDLE, INIT, INIT, SleepFunc}, SLEEP);
 }
 
 long readVcc() {
@@ -75,11 +78,21 @@ long readVcc() {
   return result;
 }
 
+unsigned long button_press_start = 0;
+
 void loop() {
+  if (button_press_start != 0 && millis() - button_press_start >= 5000) {
+    Serial.println("Registering that a startup or shutdown has been requested.");
+    buzzer_fsm.ShutdownOrStartupRequested();
+    button_press_start = 0;
+  }
   buzzer_fsm.ProcessState();
+  if (digitalRead(BUTTON_PIN) == HIGH && button_press_start == 0) button_press_start = millis();
+  if (digitalRead(BUTTON_PIN) == LOW && button_press_start != 0) button_press_start = 0;
   // Serial.println("hello");
-  Serial.print("\n\nVcc: ");
-  Serial.println( readVcc(), DEC );
+  // Serial.print("\n\nVcc: ");
+  // Serial.println( readVcc(), DEC );
+
   // digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
   // delay(1000);                       // wait for a second
   // digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
