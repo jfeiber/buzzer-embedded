@@ -54,7 +54,7 @@ void setup() {
   //TODO: there needs to be a "catastrophic" error state to go into
   buzzer_fsm.AddState({INIT_GPRS, INIT, INIT, InitFonaShieldFunc}, INIT_FONA);
   int init_gprs_next_state = CHECK_BUZZER_REGISTRATION;
-  if (strlen(buzzer_name_global) == 0) init_gprs_next_state = GET_BUZZER_NAME;
+  if (strlen(buzzer_name_global) == 0 || buzzer_name_global[0] == 0xFFFFFFFF) init_gprs_next_state = GET_BUZZER_NAME;
   buzzer_fsm.AddState({init_gprs_next_state, INIT, INIT, InitGPRSFunc}, INIT_GPRS);
   buzzer_fsm.AddState({IDLE, WAIT_BUZZER_REGISTRATION, INIT, CheckBuzzerRegFunc}, CHECK_BUZZER_REGISTRATION);
   buzzer_fsm.AddState({WAIT_BUZZER_REGISTRATION, INIT, INIT, GetBuzzerNameFunc}, GET_BUZZER_NAME);
@@ -66,9 +66,20 @@ void setup() {
   buzzer_fsm.AddState({IDLE, INIT, BUZZ, BuzzFunc}, BUZZ);
 }
 
+long readVcc() {
+  long result; // Read 1.1V reference against AVcc
+  ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
+  delay(2); // Wait for Vref to settle
+  ADCSRA |= _BV(ADSC); // Convert
+  while (bit_is_set(ADCSRA,ADSC)); result = ADCL; result |= ADCH<<8; result = 1126400L / result; // Back-calculate AVcc in mV
+  return result;
+}
+
 void loop() {
   buzzer_fsm.ProcessState();
-  Serial.println("hello");
+  // Serial.println("hello");
+  Serial.print("\n\nVcc: ");
+  Serial.println( readVcc(), DEC );
   // digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
   // delay(1000);                       // wait for a second
   // digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW

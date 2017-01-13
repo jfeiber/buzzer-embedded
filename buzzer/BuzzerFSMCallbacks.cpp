@@ -197,7 +197,7 @@ int WaitBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_stat
   OLED_PRINTLN_FLASH("buzzer.");
   OLED_PRINTLN_FLASH("Buzzer name: ");
   oled.println(buzzer_name_global);
-  while (!IsBuzzerRegistered()) delay(100);
+  if (!IsBuzzerRegistered()) return REPEAT;
   oled.clear();
   OLED_PRINTLN_FLASH("Buzzer successfully");
   OLED_PRINTLN_FLASH("registered!");
