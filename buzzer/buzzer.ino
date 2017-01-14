@@ -12,6 +12,8 @@ char buzzer_name_global[30];
 int party_id;
 int wait_time;
 char party_name[30];
+int batt_percentage;
+bool has_system_been_initialized;
 
 void ClearEEPROM() {
   for (int i=0; i<EEPROM.length(); i++) {
@@ -29,6 +31,8 @@ void setup() {
   digitalWrite(BUTTON_PIN, HIGH);
   party_id = NO_PARTY;
   wait_time = NO_PARTY;
+  batt_percentage = 100;
+  has_system_been_initialized = false;
   DEBUG_PRINTLN_FLASH("Attempting to init display");
   oled.reset(OLED_RST);
   oled.begin(&Adafruit128x64, I2C_ADDRESS);
@@ -67,6 +71,7 @@ void setup() {
   buzzer_fsm.AddState({IDLE, INIT, INIT, WakeupFunc}, WAKEUP);
   buzzer_fsm.AddState({SLEEP, INIT, INIT, ShutdownFunc}, SHUTDOWN);
   buzzer_fsm.AddState({IDLE, INIT, INIT, SleepFunc}, SLEEP);
+  buzzer_fsm.AddState({IDLE, INIT, INIT, ChargeFunc}, CHARGING);
 }
 
 long readVcc() {
@@ -79,12 +84,34 @@ long readVcc() {
 }
 
 unsigned long button_press_start = 0;
+#define FILTER_SHIFT 8
+signed long low_pass_filter = 0;
+bool usb_cabled_plugged_in = false;
 
 void loop() {
   if (button_press_start != 0 && millis() - button_press_start >= 5000) {
     Serial.println("Registering that a startup or shutdown has been requested.");
     buzzer_fsm.ShutdownOrStartupRequested();
     button_press_start = 0;
+  }
+  int fona_batt_voltage = fona_shield.GetBatteryVoltage();
+  int arduino_batt_voltage = (readVcc() >= 5000) ? ((analogRead(A0)/1023.0*5.0)*1000)-200 : readVcc();
+  DEBUG_PRINT_FLASH("Arduino batt voltage: ");
+  Serial.println(arduino_batt_voltage);
+  if (readVcc() >= 5000 && !usb_cabled_plugged_in) {
+    DEBUG_PRINTLN_FLASH("USB Cable plugged in!");
+    usb_cabled_plugged_in = true;
+    buzzer_fsm.USBCablePluggedIn();
+  }
+  if (fona_batt_voltage != -1) {
+    int total_batt_voltage = fona_batt_voltage + arduino_batt_voltage;
+    DEBUG_PRINT_FLASH("Arduino batt voltage: ");
+    Serial.println(arduino_batt_voltage);
+    int instantaneous_total_batt_voltage = ((total_batt_voltage-7400)/(float)(8400-7400))*100;
+    if (low_pass_filter == 0) low_pass_filter = instantaneous_total_batt_voltage << FILTER_SHIFT;
+    low_pass_filter = low_pass_filter - (low_pass_filter >> FILTER_SHIFT) + instantaneous_total_batt_voltage;
+    batt_percentage = low_pass_filter >> FILTER_SHIFT;
+    Serial.println(((total_batt_voltage-7400)/(float)(8400-7400))*100);
   }
   buzzer_fsm.ProcessState();
   if (digitalRead(BUTTON_PIN) == HIGH && button_press_start == 0) button_press_start = millis();
@@ -97,8 +124,8 @@ void loop() {
   // delay(1000);                       // wait for a second
   // digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
   // delay(1000);
-  // extern int __heap_start, *__brkval;
-  // int v;
-  // DEBUG_PRINTLN_FLASH("FREE RAM: ");
-  // Serial.println((int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval));
+  extern int __heap_start, *__brkval;
+  int v;
+  DEBUG_PRINTLN_FLASH("FREE RAM: ");
+  Serial.println((int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval));
 }

@@ -17,9 +17,11 @@ extern char buzzer_name_global[30];
 extern int party_id;
 extern int wait_time;
 extern char party_name[30];
+extern int batt_percentage;
+extern bool has_system_been_initialized;
 
 #define MAX_RETRIES 10
-#define _max_line_length 128
+#define _max_line_length 75
 #define NO_PARTY -1
 
 #endif

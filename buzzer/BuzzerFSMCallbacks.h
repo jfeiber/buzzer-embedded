@@ -21,5 +21,6 @@ int HeartbeatFunc(unsigned long state_start_time, int num_iterations_in_state);
 int ShutdownFunc(unsigned long state_start_time, int num_iterations_in_state);
 int SleepFunc(unsigned long state_start_time, int num_iterations_in_state);
 int WakeupFunc(unsigned long state_start_time, int num_iterations_in_state);
+int ChargeFunc(unsigned long state_start_time, int num_iterations_in_state);
 
 #endif

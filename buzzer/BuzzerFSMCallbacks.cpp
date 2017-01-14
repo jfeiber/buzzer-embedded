@@ -74,11 +74,13 @@ int GetBuzzerNameFunc(unsigned long state_start_time, int num_iterations_in_stat
 }
 
 int IdleFunc(unsigned long state_start_time, int num_iterations_in_state) {
-  if (num_iterations_in_state == 0) {
-    oled.clear();
-    OLED_PRINTLN_FLASH("Buzzer name:");
-    oled.println(buzzer_name_global);
-  }
+  has_system_been_initialized = true;
+  oled.clear();
+  OLED_PRINTLN_FLASH("Buzzer name:");
+  oled.println(buzzer_name_global);
+  OLED_PRINT_FLASH("Battery: ");
+  oled.print(batt_percentage);
+  OLED_PRINTLN_FLASH("%");
   if (millis() - state_start_time >= 20000) oled.setContrast(0);
   if (digitalRead(BUTTON_PIN) == HIGH) {
     oled.setContrast(255);
@@ -96,12 +98,25 @@ int ShutdownFunc(unsigned long state_start_time, int num_iterations_in_state) {
   return SUCCESS;
 }
 
+int ChargeFunc(unsigned long state_start_time, int num_iterations_in_state) {
+  delay(1000);
+  DEBUG_PRINTLN_FLASH("In the charge func");
+  delay(1000);
+  oled.clear();
+  OLED_PRINTLN_FLASH("Charging.....");
+  OLED_PRINT_FLASH("Battery: ");
+  oled.print(batt_percentage);
+  OLED_PRINTLN_FLASH("%");
+  return REPEAT;
+}
+
 int WakeupFunc(unsigned long state_start_time, int num_iterations_in_state) {
   oled.clear();
   OLED_PRINTLN_FLASH("Starting up.....");
   delay(2500);
   oled.clear();
-  return SUCCESS;
+  if (has_system_been_initialized) return SUCCESS;
+  return ERROR;
 }
 
 int SleepFunc(unsigned long state_start_time, int num_iterations_in_state) {
@@ -149,6 +164,9 @@ int HeartbeatFunc(unsigned long state_start_time, int num_iterations_in_state) {
   snprintf(buf, sizeof(buf), "%02dh:%02dm", wait_time_hrs, wait_time_min);
   oled.println(buf);
   DEBUG_PRINTLN(buf);
+  OLED_PRINT_FLASH("Battery: ");
+  oled.print(batt_percentage);
+  OLED_PRINTLN_FLASH("%");
   StaticJsonBuffer<_max_line_length> jsonBuffer;
   char rep_buf[_max_line_length];
  //TODO: better error handling

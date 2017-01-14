@@ -24,6 +24,10 @@ void BuzzerFSM::TransitionToNextState(int do_state_ret_val) {
   }
 }
 
+void BuzzerFSM::USBCablePluggedIn() {
+  ForceState(CHARGING);
+}
+
 void BuzzerFSM::ShutdownOrStartupRequested() {
   if (_curr_state_id == SLEEP) ForceState(WAKEUP);
   else ForceState(SHUTDOWN);

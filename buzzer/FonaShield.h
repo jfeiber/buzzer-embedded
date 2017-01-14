@@ -40,6 +40,7 @@ class FonaShield {
     int HTTPGETOneLine(FlashStrPtr URL, char *http_res_buffer, int http_res_buffer_len);
     int HTTPPOSTOneLine(FlashStrPtr URL, char *post_data_buffer, int post_data_buffer_len,
                          char *http_res_buffer, int http_res_buffer_len);
+    int GetBatteryVoltage();
 };
 
 #endif

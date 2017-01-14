@@ -7,6 +7,7 @@
 #define DEBUG_PRINTLN(str) Serial.println(str)
 
 #define OLED_PRINTLN_FLASH(str) oled.println(F(str))
+#define OLED_PRINT_FLASH(str) oled.print(F(str))
 
 #define NUM_DIGITS(x) ((x == 0) ? 1 : floor(log10(abs(x))) + 1)
 

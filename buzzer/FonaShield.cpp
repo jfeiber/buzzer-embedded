@@ -55,6 +55,23 @@ bool FonaShield::enableGPRS() {
   return true;
 }
 
+int FonaShield::GetBatteryVoltage() {
+  char batt_stat_res_buf[30];
+  sendATCommand(F("AT+CBC"));
+  if (!readAvailBytesFromSerial(batt_stat_res_buf, sizeof(batt_stat_res_buf), 500)) {
+    DEBUG_PRINTLN_FLASH("Failed to read bytes");
+    return -1;
+  }
+  if (batt_stat_res_buf == NULL) {
+    DEBUG_PRINTLN_FLASH("Found a NULL");
+    return -1;
+  }
+  DEBUG_PRINTLN_FLASH("About to strrchr");
+  char *voltage_ptr = strrchr(batt_stat_res_buf, ',');
+  if (voltage_ptr == NULL) return -1;
+  return atoi(++voltage_ptr);
+}
+
 int FonaShield::GetOneLineHTTPRes(char *http_res_buffer, int http_res_buffer_len) {
   char at_res_buffer[_max_line_length];
   unsigned long start_time = millis();
@@ -212,4 +229,5 @@ void FonaShield::resetShield() {
   digitalWrite(_rst_pin, LOW);
   delay(100);
   digitalWrite(_rst_pin, HIGH);
+  sendATCommand(F("ATZ"));
 }

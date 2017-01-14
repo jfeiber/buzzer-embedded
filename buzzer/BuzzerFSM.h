@@ -10,7 +10,7 @@ struct State {
 
 enum state_ids {INIT, INIT_FONA, INIT_GPRS, GET_BUZZER_NAME, IDLE, CHECK_BUZZER_REGISTRATION,
                 WAIT_BUZZER_REGISTRATION, GET_AVAILABLE_PARTY, ACCEPT_AVAILABLE_PARTY, HEARTBEAT,
-                BUZZ, SHUTDOWN, SLEEP, WAKEUP};
+                BUZZ, CHARGING, SHUTDOWN, SLEEP, WAKEUP};
 
 #define NEW_STATE 0
 
@@ -27,6 +27,7 @@ class BuzzerFSM {
     void AddState(State state_to_add, int state_id);
     void ProcessState();
     void ShutdownOrStartupRequested();
+    void USBCablePluggedIn();
     BuzzerFSM(State initial_state, int initial_state_id);
     BuzzerFSM(){};
 };
