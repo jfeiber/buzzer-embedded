@@ -28,6 +28,10 @@ void BuzzerFSM::USBCablePluggedIn() {
   ForceState(CHARGING);
 }
 
+void BuzzerFSM::USBCableUnplugged() {
+  if (has_system_been_initialized) ForceState(IDLE);
+  else ForceState(INIT_GPRS);
+}
 void BuzzerFSM::ShutdownOrStartupRequested() {
   if (_curr_state_id == SLEEP) ForceState(WAKEUP);
   else ForceState(SHUTDOWN);

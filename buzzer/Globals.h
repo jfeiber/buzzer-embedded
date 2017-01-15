@@ -21,7 +21,7 @@ extern int batt_percentage;
 extern bool has_system_been_initialized;
 
 #define MAX_RETRIES 10
-#define _max_line_length 75
+#define _max_line_length 120
 #define NO_PARTY -1
 
 #endif

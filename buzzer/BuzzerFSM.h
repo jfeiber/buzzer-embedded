@@ -28,6 +28,7 @@ class BuzzerFSM {
     void ProcessState();
     void ShutdownOrStartupRequested();
     void USBCablePluggedIn();
+    void USBCableUnplugged();
     BuzzerFSM(State initial_state, int initial_state_id);
     BuzzerFSM(){};
 };

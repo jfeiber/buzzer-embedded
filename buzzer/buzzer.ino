@@ -90,7 +90,7 @@ bool usb_cabled_plugged_in = false;
 
 void loop() {
   if (button_press_start != 0 && millis() - button_press_start >= 5000) {
-    Serial.println("Registering that a startup or shutdown has been requested.");
+    // Serial.println("Registering that a startup or shutdown has been requested.");
     buzzer_fsm.ShutdownOrStartupRequested();
     button_press_start = 0;
   }
@@ -102,6 +102,10 @@ void loop() {
     DEBUG_PRINTLN_FLASH("USB Cable plugged in!");
     usb_cabled_plugged_in = true;
     buzzer_fsm.USBCablePluggedIn();
+  }
+  if (readVcc() < 5000 && usb_cabled_plugged_in) {
+    usb_cabled_plugged_in = false;
+    buzzer_fsm.USBCableUnplugged();
   }
   if (fona_batt_voltage != -1) {
     int total_batt_voltage = fona_batt_voltage + arduino_batt_voltage;
@@ -124,8 +128,5 @@ void loop() {
   // delay(1000);                       // wait for a second
   // digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
   // delay(1000);
-  extern int __heap_start, *__brkval;
-  int v;
-  DEBUG_PRINTLN_FLASH("FREE RAM: ");
-  Serial.println((int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval));
+
 }
