@@ -32,7 +32,12 @@ void BuzzerFSM::USBCableUnplugged() {
   if (has_system_been_initialized) ForceState(IDLE);
   else ForceState(INIT_GPRS);
 }
-void BuzzerFSM::ShutdownOrStartupRequested() {
+
+void BuzzerFSM::ShortButtonPress() {
+  if (_curr_state_id == IDLE) ForceState(GET_AVAILABLE_PARTY);
+}
+
+void BuzzerFSM::LongButtonPress() {
   if (_curr_state_id == SLEEP) ForceState(WAKEUP);
   else ForceState(SHUTDOWN);
 }

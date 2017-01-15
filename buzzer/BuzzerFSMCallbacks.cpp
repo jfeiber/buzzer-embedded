@@ -1,17 +1,8 @@
 #include <ArduinoJson.h>
 #include "BuzzerFSMCallbacks.h"
 #include "Globals.h"
-#include "Macros.h"
 #include "BuzzerFSM.h"
-#include "Pins.h"
 #include "EEPROMReadWrite.h"
-
-void PrintFreeRAM() {
-  extern int __heap_start, *__brkval;
-  int v;
-  DEBUG_PRINTLN_FLASH("FREE RAM: ");
-  Serial.println((int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval));
-}
 
 int InitFunc(unsigned long state_start_time, int num_iterations_in_state) {
   if (num_iterations_in_state == 0){
@@ -29,7 +20,6 @@ int InitFonaShieldFunc(unsigned long state_start_time, int num_iterations_in_sta
     oled.set1X();
     OLED_PRINTLN_FLASH("Initializing\ncell modem.....");
   }
-  DEBUG_PRINTLN_FLASH("Initializing FONA shield.");
   if (num_iterations_in_state >= MAX_RETRIES) {
     oled.clear();
     OLED_PRINTLN_FLASH("Failed to initialize\ncell modem.");
@@ -49,7 +39,6 @@ int InitGPRSFunc(unsigned long state_start_time, int num_iterations_in_state) {
     oled.set1X();
     OLED_PRINTLN_FLASH("Initializing GPRS.....");
   }
-  DEBUG_PRINTLN_FLASH("Attempting to attach to GPRS netowrk");
   if (num_iterations_in_state >= MAX_RETRIES) {
     oled.clear();
     OLED_PRINTLN_FLASH("Failed to initialize\nGPRS connection.");
@@ -82,22 +71,24 @@ int GetBuzzerNameFunc(unsigned long state_start_time, int num_iterations_in_stat
 
 int IdleFunc(unsigned long state_start_time, int num_iterations_in_state) {
   has_system_been_initialized = true;
-  oled.clear();
-  OLED_PRINTLN_FLASH("Buzzer name:");
-  oled.println(buzzer_name_global);
-  OLED_PRINT_FLASH("Battery: ");
-  oled.print(batt_percentage);
-  OLED_PRINTLN_FLASH("%");
-  if (millis() - state_start_time >= 20000) oled.setContrast(0);
-  if (digitalRead(BUTTON_PIN) == HIGH) {
-    oled.setContrast(255);
-    return SUCCESS;
+  if (num_iterations_in_state == 0) {
+    oled.clear();
+    OLED_PRINTLN_FLASH("Buzzer name:");
+    oled.println(buzzer_name_global);
   }
+  if (num_iterations_in_state % 1000 == 0) {
+    oled.setCol(0);
+    oled.setRow(2);
+    oled.clearToEOL();
+    OLED_PRINT_FLASH("Battery: ");
+    oled.print(batt_percentage);
+    OLED_PRINTLN_FLASH("%");
+  }
+  if (millis() - state_start_time >= 20000) oled.setContrast(0);
   return REPEAT;
 }
 
 int ShutdownFunc(unsigned long state_start_time, int num_iterations_in_state) {
-  DEBUG_PRINTLN_FLASH("In the shutdown func.");
   oled.clear();
   OLED_PRINTLN_FLASH("Shutting down.\n Bye bye!");
   delay(5000);
@@ -106,7 +97,6 @@ int ShutdownFunc(unsigned long state_start_time, int num_iterations_in_state) {
 }
 
 int ChargeFunc(unsigned long state_start_time, int num_iterations_in_state) {
-  DEBUG_PRINTLN_FLASH("In the charge func");
   oled.clear();
   OLED_PRINTLN_FLASH("Charging.....");
   OLED_PRINT_FLASH("Battery: ");
@@ -125,7 +115,6 @@ int WakeupFunc(unsigned long state_start_time, int num_iterations_in_state) {
 }
 
 int SleepFunc(unsigned long state_start_time, int num_iterations_in_state) {
-  DEBUG_PRINTLN_FLASH("In sleep func");
   if (num_iterations_in_state == 0) {
     oled.clear();
   }
@@ -144,7 +133,6 @@ bool IsBuzzerRegistered() {
 }
 
 int APIPOSTBuzzerName(FlashStrPtr api_endpoint, char *rep_buf, int rep_buf_len, bool is_buzzing) {
-  DEBUG_PRINTLN_FLASH("In API POST BUZZER NAME");
   FlashStrPtr json_skeleton = F("{\"buzzer_name\":\"\",\"buzzing\": 0}");
   char post_data[strlen_P((prog_char *)json_skeleton)+strlen(buzzer_name_global)+1];
   Serial.println(strlen_P((prog_char *)json_skeleton));
@@ -190,9 +178,7 @@ int AcceptAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_s
   FlashStrPtr json_skeleton = F("{\"buzzer_name\":\"\",\"party_id\":\"\"}");
   int num_digits = floor(log10(abs(party_id))) + 1;
   char post_data[strlen_P((prog_char *)json_skeleton)+strlen(buzzer_name_global)+num_digits+1];
-  Serial.println(strlen_P((prog_char *)json_skeleton));
   snprintf(post_data, sizeof(post_data), "{\"buzzer_name\":\"%s\",\"party_id\":\"%d\"}", buzzer_name_global, party_id);
-  Serial.println(post_data);
   fona_shield.HTTPPOSTOneLine(F("http://restaur-anteater.herokuapp.com/buzzer_api/accept_party"), post_data, sizeof(post_data), rep_buf, sizeof(rep_buf));
   StaticJsonBuffer<_max_line_length> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(rep_buf);
@@ -201,7 +187,6 @@ int AcceptAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_s
 }
 
 int GetAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_state) {
-  DEBUG_PRINTLN_FLASH("Attempting to get an available party");
   oled.clear();
   OLED_PRINTLN_FLASH("Checking for parties");
   OLED_PRINTLN_FLASH("with no buzzer");
@@ -225,7 +210,6 @@ int GetAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_stat
 }
 
 int CheckBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_state) {
-  // Serial.println("Checking if buzzer is registered");
   oled.clear();
   OLED_PRINTLN_FLASH("Checking if this\nbuzzer is registered");
 
@@ -239,7 +223,6 @@ int CheckBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_sta
 }
 
 int WaitBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_state) {
-  // Serial.println("Waiting for the buzzer to be registered.");
   oled.clear();
   OLED_PRINTLN_FLASH("Please register");
   OLED_PRINTLN_FLASH("buzzer.");
@@ -254,7 +237,6 @@ int WaitBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_stat
 }
 
 int BuzzFunc(unsigned long state_start_time, int num_iterations_in_state) {
-  DEBUG_PRINTLN_FLASH("IN BUZZ STATE");
   oled.clear();
   OLED_PRINTLN_FLASH("Table Ready!");
   analogWrite(BUZZER_PIN, 255);

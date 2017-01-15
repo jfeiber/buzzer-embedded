@@ -9,18 +9,9 @@ FonaShield::FonaShield(SoftwareSerial *fona_serial, int rst_pin) : _fona_serial(
 bool FonaShield::initShield() {
   //init the serial interface
   _fona_serial->begin(4800);
-
   resetShield();
-
-  if (!retryATCommand(F("AT"), F("AT\xD" NEW_LINE_BYTES "OK" NEW_LINE_BYTES))) {
-    DEBUG_PRINTLN_FLASH("No ack from FONA.");
-    return false;
-  }
-
-  if (!retryATCommand(F("ATE0"), OK_REPLY)) {
-    DEBUG_PRINTLN_FLASH("Could not turn echo off.");
-    return false;
-  }
+  if (!retryATCommand(F("AT"), F("AT\xD" NEW_LINE_BYTES "OK" NEW_LINE_BYTES))) return false;
+  if (!retryATCommand(F("ATE0"), OK_REPLY)) return false;
   return true;
 }
 
@@ -34,22 +25,22 @@ bool FonaShield::retryATCommand(FlashStrPtr at_command, FlashStrPtr expected_res
 }
 
 bool FonaShield::enableGPRS() {
-  DEBUG_PRINTLN_FLASH("Attempting to enable GPRS");
-  DEBUG_PRINTLN_FLASH("Shutting down connections");
+  // DEBUG_PRINTLN_FLASH("Attempting to enable GPRS");
+  // DEBUG_PRINTLN_FLASH("Shutting down connections");
   if (!sendATCommandCheckReply(F("AT+CIPSHUT"), F(NEW_LINE_BYTES "SHUT OK" NEW_LINE_BYTES), 1000)) return false;
-  DEBUG_PRINTLN_FLASH("Shutting down any open PDP contexts");
+  // DEBUG_PRINTLN_FLASH("Shutting down any open PDP contexts");
   if (!sendATCommandCheckAck(F("AT+SAPBR=0,1"), 1000)) return false;
-  DEBUG_PRINTLN_FLASH("Attaching to GPRS network");
+  // DEBUG_PRINTLN_FLASH("Attaching to GPRS network");
   if (!sendATCommandCheckReply(F("AT+CGATT=1"), OK_REPLY, 1000)) return false;
-  DEBUG_PRINTLN_FLASH("Set bearer profile to GPRS");
+  // DEBUG_PRINTLN_FLASH("Set bearer profile to GPRS");
   if (!sendATCommandCheckReply(F("AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\""), OK_REPLY, 1000)) return false;
-  DEBUG_PRINTLN_FLASH("Set APN in bearer profile");
+  // DEBUG_PRINTLN_FLASH("Set APN in bearer profile");
   if (!sendATCommandCheckReply(F("AT+SAPBR=3,1,\"APN\",\"" APN "\""), OK_REPLY, 1000)) return false;
-  DEBUG_PRINTLN_FLASH("Set APN for PDP contexts");
+  // DEBUG_PRINTLN_FLASH("Set APN for PDP contexts");
   if (!sendATCommandCheckReply(F("AT+CSTT=\"" APN "\""), OK_REPLY, 1000)) return false;
-  DEBUG_PRINTLN_FLASH("Create a PDP context");
+  // DEBUG_PRINTLN_FLASH("Create a PDP context");
   if (!sendATCommandCheckReply(F("AT+SAPBR=1,1"), OK_REPLY, 2000)) return false;
-  DEBUG_PRINTLN_FLASH("Bring up wireless connection");
+  // DEBUG_PRINTLN_FLASH("Bring up wireless connection");
   if (!sendATCommandCheckReply(F("AT+CIICR"), OK_REPLY, 1000)) return false;
 
   return true;
@@ -58,15 +49,8 @@ bool FonaShield::enableGPRS() {
 int FonaShield::GetBatteryVoltage() {
   char batt_stat_res_buf[30];
   sendATCommand(F("AT+CBC"));
-  if (!readAvailBytesFromSerial(batt_stat_res_buf, sizeof(batt_stat_res_buf), 500)) {
-    DEBUG_PRINTLN_FLASH("Failed to read bytes");
-    return -1;
-  }
-  if (batt_stat_res_buf == NULL) {
-    DEBUG_PRINTLN_FLASH("Found a NULL");
-    return -1;
-  }
-  DEBUG_PRINTLN_FLASH("About to strrchr");
+  if (!readAvailBytesFromSerial(batt_stat_res_buf, sizeof(batt_stat_res_buf), 500)) return -1;
+  if (batt_stat_res_buf == NULL) return -1;
   char *voltage_ptr = strrchr(batt_stat_res_buf, ',');
   if (voltage_ptr == NULL) return -1;
   return atoi(++voltage_ptr);

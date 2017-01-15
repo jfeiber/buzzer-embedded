@@ -26,7 +26,8 @@ class BuzzerFSM {
   public:
     void AddState(State state_to_add, int state_id);
     void ProcessState();
-    void ShutdownOrStartupRequested();
+    void ShortButtonPress();
+    void LongButtonPress();
     void USBCablePluggedIn();
     void USBCableUnplugged();
     BuzzerFSM(State initial_state, int initial_state_id);

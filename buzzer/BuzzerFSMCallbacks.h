@@ -1,8 +1,8 @@
 #ifndef BUZZERFSMCALLBACKS_H
 #define BUZZERFSMCALLBACKS_H
 
+#include "Helpers.h"
 #include "Pins.h"
-#include "Macros.h"
 
 
 int InitFunc(unsigned long state_start_time, int num_iterations_in_state);

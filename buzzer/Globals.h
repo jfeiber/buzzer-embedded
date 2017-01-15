@@ -19,6 +19,8 @@ extern int wait_time;
 extern char party_name[30];
 extern int batt_percentage;
 extern bool has_system_been_initialized;
+extern unsigned long button_press_start;
+extern bool usb_cabled_plugged_in;
 
 #define MAX_RETRIES 10
 #define _max_line_length 120
