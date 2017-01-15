@@ -99,14 +99,14 @@ void loop() {
     }
     last_batt_update = millis();
   }
-  // if (readVcc() >= 5000 && !usb_cabled_plugged_in) {
-  //   usb_cabled_plugged_in = true;
-  //   buzzer_fsm.USBCablePluggedIn();
-  // }
-  // if (readVcc() < 5000 && usb_cabled_plugged_in) {
-  //   usb_cabled_plugged_in = false;
-  //   buzzer_fsm.USBCableUnplugged();
-  // }
+  if (readVcc() >= 5000 && !usb_cabled_plugged_in) {
+    usb_cabled_plugged_in = true;
+    buzzer_fsm.USBCablePluggedIn();
+  }
+  if (readVcc() < 5000 && usb_cabled_plugged_in) {
+    usb_cabled_plugged_in = false;
+    buzzer_fsm.USBCableUnplugged();
+  }
 
   if (digitalRead(BUTTON_PIN) == HIGH && button_press_start == 0) button_press_start = millis();
 

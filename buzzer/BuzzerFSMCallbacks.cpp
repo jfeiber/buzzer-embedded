@@ -69,6 +69,17 @@ int GetBuzzerNameFunc(unsigned long state_start_time, int num_iterations_in_stat
   return SUCCESS;
 }
 
+void UpdateBatteryPercentage(int row, int num_iterations_in_state) {
+  if (num_iterations_in_state % 1000 == 0) {
+    oled.setCol(0);
+    oled.setRow(row);
+    oled.clearToEOL();
+    OLED_PRINT_FLASH("Battery: ");
+    oled.print(batt_percentage);
+    OLED_PRINTLN_FLASH("%");
+  }
+}
+
 int IdleFunc(unsigned long state_start_time, int num_iterations_in_state) {
   has_system_been_initialized = true;
   if (num_iterations_in_state == 0) {
@@ -76,14 +87,7 @@ int IdleFunc(unsigned long state_start_time, int num_iterations_in_state) {
     OLED_PRINTLN_FLASH("Buzzer name:");
     oled.println(buzzer_name_global);
   }
-  if (num_iterations_in_state % 1000 == 0) {
-    oled.setCol(0);
-    oled.setRow(2);
-    oled.clearToEOL();
-    OLED_PRINT_FLASH("Battery: ");
-    oled.print(batt_percentage);
-    OLED_PRINTLN_FLASH("%");
-  }
+  UpdateBatteryPercentage(2, num_iterations_in_state);
   if (millis() - state_start_time >= 20000) oled.setContrast(0);
   return REPEAT;
 }
@@ -97,11 +101,11 @@ int ShutdownFunc(unsigned long state_start_time, int num_iterations_in_state) {
 }
 
 int ChargeFunc(unsigned long state_start_time, int num_iterations_in_state) {
-  oled.clear();
-  OLED_PRINTLN_FLASH("Charging.....");
-  OLED_PRINT_FLASH("Battery: ");
-  oled.print(batt_percentage);
-  OLED_PRINTLN_FLASH("%");
+  if (num_iterations_in_state == 0) {
+    oled.clear();
+    OLED_PRINTLN_FLASH("Charging.....");
+  }
+  UpdateBatteryPercentage(1, num_iterations_in_state);
   return REPEAT;
 }
 
@@ -141,20 +145,20 @@ int APIPOSTBuzzerName(FlashStrPtr api_endpoint, char *rep_buf, int rep_buf_len, 
 }
 
 int HeartbeatFunc(unsigned long state_start_time, int num_iterations_in_state) {
-  oled.clear();
-  OLED_PRINTLN_FLASH("Party name:");
-  oled.println(party_name);
-  OLED_PRINTLN_FLASH("Expected wait time: ");
-  int wait_time_hrs = wait_time/60;
-  int wait_time_min = wait_time - wait_time_hrs*60;
-  int num_digits_hrs = wait_time_hrs < 10 ? NUM_DIGITS(wait_time_hrs) + 1 : NUM_DIGITS(wait_time_hrs);
-  int num_digits_min = wait_time_min < 10 ? NUM_DIGITS(wait_time_min) + 1 : NUM_DIGITS(wait_time_min);
-  char buf[num_digits_min + num_digits_hrs + 4];
-  snprintf(buf, sizeof(buf), "%02dh:%02dm", wait_time_hrs, wait_time_min);
-  oled.println(buf);
-  OLED_PRINT_FLASH("Battery: ");
-  oled.print(batt_percentage);
-  OLED_PRINTLN_FLASH("%");
+  if (num_iterations_in_state == 0) {
+    oled.clear();
+    OLED_PRINTLN_FLASH("Party name:");
+    oled.println(party_name);
+    OLED_PRINTLN_FLASH("Expected wait time: ");
+    int wait_time_hrs = wait_time/60;
+    int wait_time_min = wait_time - wait_time_hrs*60;
+    int num_digits_hrs = wait_time_hrs < 10 ? NUM_DIGITS(wait_time_hrs) + 1 : NUM_DIGITS(wait_time_hrs);
+    int num_digits_min = wait_time_min < 10 ? NUM_DIGITS(wait_time_min) + 1 : NUM_DIGITS(wait_time_min);
+    char buf[num_digits_min + num_digits_hrs + 4];
+    snprintf(buf, sizeof(buf), "%02dh:%02dm", wait_time_hrs, wait_time_min);
+    oled.println(buf);
+  }
+  UpdateBatteryPercentage(4, num_iterations_in_state);
   PrintFreeRAM();
   char rep_buf[_max_line_length];
  //TODO: better error handling
