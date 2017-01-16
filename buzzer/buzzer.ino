@@ -1,3 +1,14 @@
+/*
+  File:
+  buzzer.ino
+
+  Description:
+  The main file in this project. Includes the setup() and loop() methods. setup() is called by the
+  Arduino on reset and loop is basically the main method of the program that's called repeatedly
+  by the Arduino after setup() has finished.
+
+ */
+
 #include "Helpers.h"
 #include "BuzzerFSMCallbacks.h"
 #include "Globals.h"
@@ -5,6 +16,7 @@
 #include "EEPROMReadWrite.h"
 #include "LPF.h"
 
+// Initializations of global variables definied in "Globals.h".
 BuzzerFSM buzzer_fsm({INIT_FONA, INIT, INIT, InitFunc}, INIT);
 SoftwareSerial fona_serial = SoftwareSerial(FONA_TX_PIN, FONA_RX_PIN);
 FonaShield fona_shield(&fona_serial, FONA_RST_PIN);
@@ -18,6 +30,10 @@ bool has_system_been_initialized = false;
 unsigned long button_press_start = 0;
 unsigned long last_batt_update = 0;
 bool usb_cabled_plugged_in = false;
+
+/*
+  * Adds all states to the Buzzer FSM.
+*/
 
 void init_fsm() {
   //TODO: there needs to be a "catastrophic" error state to go into
@@ -39,12 +55,21 @@ void init_fsm() {
   buzzer_fsm.AddState({IDLE, INIT, INIT, ChargeFunc}, CHARGING);
 }
 
+/*
+  * The name of the Buzzer is stored in EEPROM. This function reads the bytes at the location
+  * where the name should be stored (0x0) and stores it in a global variable.
+*/
+
 void get_buzzer_name_from_eeprom() {
   EEPROMRead(buzzer_name_global, sizeof(buzzer_name_global));
   DEBUG_PRINTLN_FLASH("Stored in eeprom: ");
   DEBUG_PRINTLN(buzzer_name_global);
-  Serial.println(buzzer_name_global[0], HEX);
 }
+
+/*
+  * Buzzes the vibration motor twice. Used in the setup sequence to verify that the buzzer is
+  * working.
+*/
 
 void buzz_twice() {
   analogWrite(BUZZER_PIN, 255);
@@ -65,6 +90,10 @@ void setup_pins() {
   // digitalWrite(BUTTON_PIN, HIGH);
 }
 
+/*
+  * Initializes the OLED screen.
+*/
+
 void init_oled() {
   oled.reset(OLED_RST);
   oled.begin(&Adafruit128x64, I2C_ADDRESS);
@@ -74,6 +103,12 @@ void init_oled() {
   oled.ssd1306WriteCmd(SSD1306_SEGREMAP);
   oled.ssd1306WriteCmd(SSD1306_COMSCANINC);
 }
+
+/*
+  * Called on reset. Sets up the GPIO pins in the right modes, initializes the OLED, tests the
+  * vibration motor, gets the buzzer name from the EEPROM (if there is one), and Initializes
+  * the FSM.
+*/
 
 void setup() {
   Serial.begin(115200);
@@ -85,10 +120,31 @@ void setup() {
   init_fsm();
 }
 
+/*
+  * The core method of Buzzer. After setup has completed, this method is called repeatedly in an
+  * endless loop.
+  *
+  * This method processes the current FSM state and feeds the current battery voltage into a low
+  * pass filter (to reduce noise) every 15 seconds. If something has happened with one of the
+  * peripherals (USB cable plugged in, button pressed), this method will tell the FSM about that
+  * event.
+*/
+
 void loop() {
+
+  // Do the work of the current FSM state.
   buzzer_fsm.ProcessState();
+
+  // Feed the current battery voltage (the battery voltage of the FONA lipo and the battery voltage
+  // of the arduino lipo combined) into a LPF every 15 seconds.
   if (last_batt_update == 0 || millis() - last_batt_update >= 15000) {
     int fona_batt_voltage = fona_shield.GetBatteryVoltage();
+
+    // If readVcc > 5V (5000mV), that means the USB cable is plugged in and we should read the
+    // Arduino lipo voltage from A0. The -200 at the end is a fudge factor because the ADC on the
+    // Arduino has an inherent bias. When the Arduino is running of the lipo the battery voltage
+    // is just Vcc. We can't measure the lipo voltage accurately from A0 because the reference
+    // voltage isn't constant when running of the battery (the battery is draining).
     int arduino_batt_voltage = (readVcc() >= 5000) ? ((analogRead(A0)/1023.0*5.0)*1000)-200 : readVcc();
     if (fona_batt_voltage != -1) {
       int total_batt_voltage = fona_batt_voltage + arduino_batt_voltage;
@@ -99,6 +155,8 @@ void loop() {
     }
     last_batt_update = millis();
   }
+
+  // Poke the FSM if the the USB cable has been plugged in or unplugged.
   if (readVcc() >= 5000 && !usb_cabled_plugged_in) {
     usb_cabled_plugged_in = true;
     buzzer_fsm.USBCablePluggedIn();
@@ -108,14 +166,12 @@ void loop() {
     buzzer_fsm.USBCableUnplugged();
   }
 
+  // Record the start time of a button press.
   if (digitalRead(BUTTON_PIN) == HIGH && button_press_start == 0) button_press_start = millis();
 
+  // If a button press duration is longer than 5 seconds (5000 ms), poke the FSM.
   if (button_press_start != 0) {
-    // The ternary operator is to deal with the fact that millis() overflows when the arduino has been running
-    // for ~30 minutes.
     unsigned long button_press_duration = get_button_press_duration(button_press_start);
-    DEBUG_PRINTLN_FLASH("button press duration: ");
-    Serial.println(button_press_duration);
     if (button_press_duration >= 5000) {
       DEBUG_PRINTLN_FLASH("Long button press registered");
       buzzer_fsm.LongButtonPress();
@@ -123,6 +179,7 @@ void loop() {
     }
   }
 
+  // If it was a short button press and the button has now been released, poke the FSM. 
   if (digitalRead(BUTTON_PIN) == LOW && button_press_start != 0) {
     unsigned long button_press_duration = get_button_press_duration(button_press_start);
     if (button_press_duration > 0 && button_press_duration < 5000) {

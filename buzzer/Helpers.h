@@ -1,6 +1,15 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
+/*
+  File:
+  Helpers.h
+
+  Description:
+  Contains various helper methods/macros that are useful in the project.
+
+ */
+
 #include <EEPROM.h>
 #include <Arduino.h>
 #include <limits.h>
@@ -26,6 +35,8 @@ inline void ClearEEPROM() {
 }
 
 inline unsigned long get_button_press_duration(unsigned long button_press_start) {
+  // The if statement is to deal with the fact that millis() overflows when the arduino has
+  // been running for ~30 minutes.
   if (millis() >= button_press_start) return millis()-button_press_start;
   else return (ULONG_MAX - button_press_start) + millis();
 }
