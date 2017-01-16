@@ -2,7 +2,7 @@
 #define FONASHIELD_H
 
 #include <SoftwareSerial.h>
-#include "Macros.h"
+#include "Helpers.h"
 
 #define _baud_rate 4800
 #define APN "wholesale"
@@ -11,6 +11,8 @@
 
 #define HTTP_TIMEOUT 20000 //ms
 
+#define AT_TIMEOUT 50
+
 class FonaShield {
   private:
     SoftwareSerial *_fona_serial;
@@ -18,10 +20,10 @@ class FonaShield {
     bool readAvailBytesFromSerial(char *buffer, int buffer_len, unsigned long timeout);
     void resetShield();
     void sendATCommand(FlashStrPtr command, bool use_newline = true);
-    bool sendATCommandCheckReply(FlashStrPtr command, FlashStrPtr expected_reply, unsigned long timeout = 50);
-    bool sendATCommandParamCheckReply(FlashStrPtr at_command, FlashStrPtr param_name, FlashStrPtr param_val, FlashStrPtr expected_reply, unsigned long timeout = 50);
-    bool sendATCommandCheckReply(FlashStrPtr command, char *buffer, int buffer_len, FlashStrPtr expected_reply, unsigned long timeout = 50);
-    bool sendATCommandCheckAck(FlashStrPtr command, unsigned long timeout = 50);
+    bool sendATCommandCheckReply(FlashStrPtr command, FlashStrPtr expected_reply, unsigned long timeout = AT_TIMEOUT);
+    bool sendATCommandParamCheckReply(FlashStrPtr at_command, FlashStrPtr param_name, FlashStrPtr param_val, FlashStrPtr expected_reply, unsigned long timeout = AT_TIMEOUT);
+    bool sendATCommandCheckReply(FlashStrPtr command, char *buffer, int buffer_len, FlashStrPtr expected_reply, unsigned long timeout = AT_TIMEOUT);
+    bool sendATCommandCheckAck(FlashStrPtr command, unsigned long timeout = AT_TIMEOUT);
     bool checkATCommandReply(FlashStrPtr expected_reply, unsigned long timeout);
     bool checkATCommandReply(FlashStrPtr expected_reply, char *rep_buffer, int buffer_len, unsigned long timeout);
     int getHTTPStatusFromRes(char *rep_buffer);
@@ -40,6 +42,7 @@ class FonaShield {
     int HTTPGETOneLine(FlashStrPtr URL, char *http_res_buffer, int http_res_buffer_len);
     int HTTPPOSTOneLine(FlashStrPtr URL, char *post_data_buffer, int post_data_buffer_len,
                          char *http_res_buffer, int http_res_buffer_len);
+    int GetBatteryVoltage();
 };
 
 #endif

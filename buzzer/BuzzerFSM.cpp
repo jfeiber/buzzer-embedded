@@ -24,6 +24,30 @@ void BuzzerFSM::TransitionToNextState(int do_state_ret_val) {
   }
 }
 
+void BuzzerFSM::USBCablePluggedIn() {
+  ForceState(CHARGING);
+}
+
+void BuzzerFSM::USBCableUnplugged() {
+  if (has_system_been_initialized) ForceState(IDLE);
+  else ForceState(INIT_GPRS);
+}
+
+void BuzzerFSM::ShortButtonPress() {
+  if (_curr_state_id == IDLE) ForceState(GET_AVAILABLE_PARTY);
+}
+
+void BuzzerFSM::LongButtonPress() {
+  if (_curr_state_id == SLEEP) ForceState(WAKEUP);
+  else ForceState(SHUTDOWN);
+}
+
+void BuzzerFSM::ForceState(int new_state_id) {
+  _state_start_time = NEW_STATE;
+  _num_iterations_in_state = 0;
+  _curr_state_id = new_state_id;
+}
+
 void BuzzerFSM::AddState(State state_to_add, int state_id) {
   _states[state_id] = state_to_add;
 }

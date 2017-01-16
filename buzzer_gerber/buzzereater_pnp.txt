@@ -1,0 +1,38 @@
+*Pick And Place List
+*Company=
+*Author=
+*eMail=
+*
+*Project=buzzereater
+*Date=13:26:02
+*CreatedBy=Fritzing 0.9.3b.04.19.5c895d327c44a3114e5fcc9d8260daf0cbb52806
+*
+*
+*Coordinates in mm, always center of component
+*Origin 0/0=Lower left corner of PCB
+*Rotation in degree (0-360, math. pos.)
+*
+*No;Value;Package;X;Y;Rotation;Side;Name
+1;;;61.3073;-31.3847;0;Bottom;Part5
+2;;;36.9972;-36.4546;0;Bottom;TXT1
+3;;;33.4193;-43.8571;0;Bottom;TXT1
+4;;;31.3445;-40.2756;0;Bottom;TXT1
+5;;vibe-motor-10mm;38.7822;-46.1378;180;Bottom;U1
+6;;;8.60608;-47.1485;0;Bottom;TXT1
+7;;;14.8943;-30.0598;-90;Bottom;TXT1
+8;;300 mil [THT];33.0135;-46.8478;180;Bottom;D1
+9;;;31.1071;-28.7369;0;Bottom;TXT1
+10;;;15.3148;-13.7369;0;Bottom;TXT1
+11;;THT;17.7481;-21.4478;-90;Bottom;J2
+12;;;41.4627;-35.6718;90;Bottom;TXT1
+13;;;65.6793;-42.11;0;Bottom;TXT1
+14;;;61.6548;-16.6841;0;Bottom;TXT1
+15;;;19.7273;-40.5808;0;Bottom;TXT1
+16;220;THT;17.469;-29.8521;-90;Bottom;R4
+17;;;37.1656;-33.9761;0;Bottom;TXT1
+18;;;31.2141;-31.0847;0;Bottom;TXT1
+19;;TO92 [THT];19.2086;-44.3967;180;Bottom;Q1
+20;;THT;34.2581;-34.1478;0;Bottom;J1
+21;;THT;17.7481;-6.20777;-90;Bottom;J3
+22;;;46.2554;-49.3264;0;Bottom;TXT1
+23;;THT;7.58811;-44.3078;90;Bottom;J4
