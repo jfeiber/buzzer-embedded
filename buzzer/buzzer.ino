@@ -179,7 +179,7 @@ void loop() {
     }
   }
 
-  // If it was a short button press and the button has now been released, poke the FSM. 
+  // If it was a short button press and the button has now been released, poke the FSM.
   if (digitalRead(BUTTON_PIN) == LOW && button_press_start != 0) {
     unsigned long button_press_duration = get_button_press_duration(button_press_start);
     if (button_press_duration > 0 && button_press_duration < 5000) {
