@@ -5,7 +5,7 @@
   Description:
   Contains the main code for the Buzzer Finite State Machine (FSM).
 
- */
+*/
 
 #include <Arduino.h>
 #include "BuzzerFSM.h"

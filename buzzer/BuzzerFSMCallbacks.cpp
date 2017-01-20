@@ -5,7 +5,7 @@
   Description:
   Contains all the functions that represent the work a state needs to perform. Called by
   BuzzerFSM::DoState.
- */
+*/
 
 #include <ArduinoJson.h>
 #include "BuzzerFSMCallbacks.h"

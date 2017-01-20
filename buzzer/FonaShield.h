@@ -1,18 +1,35 @@
+/*
+  File:
+  FonaShield.h
+
+  Description:
+  Class that serves as a driver for the FONA 800 cell radio. It's not a complete driver, it only
+  includes methods for the functionality that Buzzer needs (HTTP GET/POST over GPRS).
+*/
+
 #ifndef FONASHIELD_H
 #define FONASHIELD_H
 
 #include <SoftwareSerial.h>
 #include "Helpers.h"
 
+// Baud rate of cell radio.
 #define _baud_rate 4800
+// Ting APN.
 #define APN "wholesale"
+// All messages received from the cell radio begin and end with these 2 bytes.
 #define NEW_LINE_BYTES "\r\xA"
+// Standard OK ack after AT command echoing has been turned off.
 #define OK_REPLY F(NEW_LINE_BYTES "OK" NEW_LINE_BYTES)
 
+// How long to wait after an HTTP GET or POST request before failing.
 #define HTTP_TIMEOUT 20000 //ms
 
+// The default amount of time to wait for new bytes to be received from the cell radio before we
+// assume no new bytes are coming.
 #define AT_TIMEOUT 50
 
+// Main class that serves as the FONA 800 driver.
 class FonaShield {
   private:
     SoftwareSerial *_fona_serial;

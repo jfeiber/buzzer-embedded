@@ -4,7 +4,7 @@
 
   Description:
   Contains a few helper methods for reading/writing from the EEPROM.
- */
+*/
 
 #ifndef EEPROMREADWRITE_H
 #define EEPROMREADWRITE_H

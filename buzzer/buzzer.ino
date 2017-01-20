@@ -7,7 +7,7 @@
   Arduino on reset and loop is basically the main method of the program that's called repeatedly
   by the Arduino after setup() has finished.
 
- */
+*/
 
 #include "Helpers.h"
 #include "BuzzerFSMCallbacks.h"

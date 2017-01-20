@@ -6,7 +6,7 @@
   Contains the main code for the Buzzer Finite State Machine (FSM).
   The IDs for all the states and the State struct are also declared in this header file.
 
- */
+*/
 
 #ifndef BUZZERFSM_H
 #define BUZZERFSM_H
