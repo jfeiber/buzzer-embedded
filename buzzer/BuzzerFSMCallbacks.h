@@ -13,6 +13,16 @@
 #include "Helpers.h"
 #include "Pins.h"
 
+#define PARTY_AVAIL_FIELD "p_a"
+#define PARTY_NAME_FIELD "n"
+#define PARTY_WAIT_TIME_FIELD "t"
+#define PARTY_ID_FIELD "id"
+#define BUZZER_NAME_FIELD "bn"
+#define IS_ACTIVE_FIELD "i_a"
+#define BUZZ_FIELD "b"
+#define IS_BUZZER_REGISTERED_FIELD "i_reg"
+#define ERROR_STATUS_FIELD "e"
+#define ERROR_MESSAGE_FIELD "e_msg"
 
 int InitFunc(unsigned long state_start_time, int num_iterations_in_state);
 int BuzzFunc(unsigned long state_start_time, int num_iterations_in_state);

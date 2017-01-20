@@ -22,6 +22,8 @@
 #define OLED_PRINTLN_FLASH(str) oled.println(F(str))
 #define OLED_PRINT_FLASH(str) oled.print(F(str))
 
+#define NUM_DIGITS(num) floor(log10(abs(num))) + 1
+
 #define NUM_DIGITS(x) ((x == 0) ? 1 : floor(log10(abs(x))) + 1)
 
 typedef char PROGMEM prog_char;
