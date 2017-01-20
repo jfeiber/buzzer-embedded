@@ -136,16 +136,16 @@ void loop() {
   buzzer_fsm.ProcessState();
 
   // Feed the current battery voltage (the battery voltage of the FONA lipo and the battery voltage
-  // of the arduino lipo combined) into a LPF every 15 seconds.
-  if (last_batt_update == 0 || millis() - last_batt_update >= 15000) {
+  // of the arduino lipo combined) into a LPF every 7.5 seconds.
+  if (last_batt_update == 0 || millis() - last_batt_update >= 7500) {
     int fona_batt_voltage = fona_shield.GetBatteryVoltage();
 
-    // If readVcc > 5V (5000mV), that means the USB cable is plugged in and we should read the
-    // Arduino lipo voltage from A0. The -200 at the end is a fudge factor because the ADC on the
+    // If readVcc > 4.3V (4300mV), that means the USB cable is plugged in and we should read the
+    // Arduino lipo voltage from A0. The -400 at the end is a fudge factor because the ADC on the
     // Arduino has an inherent bias. When the Arduino is running of the lipo the battery voltage
     // is just Vcc. We can't measure the lipo voltage accurately from A0 because the reference
     // voltage isn't constant when running of the battery (the battery is draining).
-    int arduino_batt_voltage = (readVcc() >= 5000) ? ((analogRead(A0)/1023.0*5.0)*1000)-200 : readVcc();
+    int arduino_batt_voltage = (readVcc() >= 4300) ? ((analogRead(A0)/1023.0*5.0)*1000)-400 : readVcc();
     if (fona_batt_voltage != -1) {
       int total_batt_voltage = fona_batt_voltage + arduino_batt_voltage;
       int instantaneous_total_batt_voltage = ((total_batt_voltage-7400)/(float)(8400-7400))*100;
@@ -157,11 +157,11 @@ void loop() {
   }
 
   // Poke the FSM if the the USB cable has been plugged in or unplugged.
-  if (readVcc() >= 5000 && !usb_cabled_plugged_in) {
+  if (readVcc() >= 4300 && !usb_cabled_plugged_in) {
     usb_cabled_plugged_in = true;
     buzzer_fsm.USBCablePluggedIn();
   }
-  if (readVcc() < 5000 && usb_cabled_plugged_in) {
+  if (readVcc() < 4300 && usb_cabled_plugged_in) {
     usb_cabled_plugged_in = false;
     buzzer_fsm.USBCableUnplugged();
   }
