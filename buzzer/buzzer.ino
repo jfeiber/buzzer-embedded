@@ -23,9 +23,9 @@ FonaShield fona_shield(&fona_serial, FONA_RST_PIN);
 SSD1306AsciiAvrI2c oled;
 char buzzer_name_global[30];
 int party_id = NO_PARTY;
-int wait_time = NO_PARTY;
-char party_name[30];
-int batt_percentage = 100;
+short wait_time = NO_PARTY;
+char party_name[20];
+short batt_percentage = 100;
 bool has_system_been_initialized = false;
 unsigned long button_press_start = 0;
 unsigned long last_batt_update = 0;
@@ -157,14 +157,14 @@ void loop() {
   }
 
   // Poke the FSM if the the USB cable has been plugged in or unplugged.
-  if (readVcc() >= 4300 && !usb_cabled_plugged_in) {
-    usb_cabled_plugged_in = true;
-    buzzer_fsm.USBCablePluggedIn();
-  }
-  if (readVcc() < 4300 && usb_cabled_plugged_in) {
-    usb_cabled_plugged_in = false;
-    buzzer_fsm.USBCableUnplugged();
-  }
+  // if (readVcc() >= 4300 && !usb_cabled_plugged_in) {
+  //   usb_cabled_plugged_in = true;
+  //   buzzer_fsm.USBCablePluggedIn();
+  // }
+  // if (readVcc() < 4300 && usb_cabled_plugged_in) {
+  //   usb_cabled_plugged_in = false;
+  //   buzzer_fsm.USBCableUnplugged();
+  // }
 
   // Record the start time of a button press.
   if (digitalRead(BUTTON_PIN) == HIGH && button_press_start == 0) button_press_start = millis();
