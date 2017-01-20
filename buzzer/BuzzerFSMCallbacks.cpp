@@ -18,6 +18,7 @@
  *
  * @input how long the FSM has been in the current state.
  * @input how many iterations the FSM has been in the current state.
+ * @return SUCCESS always.
 */
 
 int InitFunc(unsigned long state_start_time, int num_iterations_in_state) {
@@ -36,6 +37,9 @@ int InitFunc(unsigned long state_start_time, int num_iterations_in_state) {
  *
  * @input how long the FSM has been in the current state.
  * @input how many iterations the FSM has been in the current state.
+ * @return SUCCESS if the cell radio has been fully initialized, REPEAT if the cell radio wasn't
+ * successfully initialized but we haven't yet retried MAX_RETRIES number of times, and ERROR if
+ * we have tried to init the cell radio for MAX_RETRIES number of times and it still won't work.
 */
 
 int InitFonaShieldFunc(unsigned long state_start_time, int num_iterations_in_state) {
@@ -63,6 +67,9 @@ int InitFonaShieldFunc(unsigned long state_start_time, int num_iterations_in_sta
  *
  * @input how long the FSM has been in the current state.
  * @input how many iterations the FSM has been in the current state.
+ * @return SUCCESS if the cell radio was configured for GPRS, REPEAT if the cell radio wasn't
+ * successfully configured but we haven't yet retried MAX_RETRIES number of times, and ERROR if
+ * we have tried to configure the cell radio for MAX_RETRIES number of times and it still won't work
 */
 
 int InitGPRSFunc(unsigned long state_start_time, int num_iterations_in_state) {
@@ -91,6 +98,8 @@ int InitGPRSFunc(unsigned long state_start_time, int num_iterations_in_state) {
  *
  * @input how long the FSM has been in the current state.
  * @input how many iterations the FSM has been in the current state.
+ * @return SUCCESS always.
+ * TODO: need to return ERROR if something went wrong with the API.
 */
 
 int GetBuzzerNameFunc(unsigned long state_start_time, int num_iterations_in_state) {
@@ -136,6 +145,8 @@ void UpdateBatteryPercentage(int row, int num_iterations_in_state) {
  *
  * @input how long the FSM has been in the current state.
  * @input how many iterations the FSM has been in the current state.
+ * @return REPEAT always. An external event (button press, charging cable plugged in) needs to occur
+ * to transition away from this state.
 */
 
 int IdleFunc(unsigned long state_start_time, int num_iterations_in_state) {
@@ -156,6 +167,7 @@ int IdleFunc(unsigned long state_start_time, int num_iterations_in_state) {
  *
  * @input how long the FSM has been in the current state.
  * @input how many iterations the FSM has been in the current state.
+ * @return SUCCESS always.
 */
 
 int ShutdownFunc(unsigned long state_start_time, int num_iterations_in_state) {
@@ -172,6 +184,8 @@ int ShutdownFunc(unsigned long state_start_time, int num_iterations_in_state) {
  *
  * @input how long the FSM has been in the current state.
  * @input how many iterations the FSM has been in the current state.
+ * @return REPEAT always. The USB cable needs to be unplugged (external event) before a transition
+ * away from this state occurs.
 */
 
 int ChargeFunc(unsigned long state_start_time, int num_iterations_in_state) {
@@ -300,9 +314,19 @@ int HeartbeatFunc(unsigned long state_start_time, int num_iterations_in_state) {
   return REPEAT;
 }
 
+/*
+ * The state the runs when there is a party available. This pings an API endpoint that confirms
+ * that the Buzzer is accepting the available party.
+ *
+ * @input how long the FSM has been in the current state.
+ * @input how many iterations the FSM has been in the current state.
+ * @return SUCCESS if the party was successfully accepted or ERROR otherwise.
+*/
+
 int AcceptAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_state) {
   char rep_buf[_max_line_length];
   FlashStrPtr json_skeleton = F("{\"buzzer_name\":\"\",\"party_id\":\"\"}");
+  //calculate the number of digits in the current party_id
   int num_digits = floor(log10(abs(party_id))) + 1;
   char post_data[strlen_P((prog_char *)json_skeleton)+strlen(buzzer_name_global)+num_digits+1];
   snprintf(post_data, sizeof(post_data), "{\"buzzer_name\":\"%s\",\"party_id\":\"%d\"}", buzzer_name_global, party_id);
@@ -312,6 +336,17 @@ int AcceptAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_s
   if (strcmp(root["status"], "success") == 0) return SUCCESS;
   return ERROR;
 }
+
+/*
+ * The state the runs when a short button press occurs. It pings an API endpoint to see if there are
+ * any parties available. If there are, then ACCEPT_AVAILABLE_PARTY will be the next state.
+ *
+ * @input how long the FSM has been in the current state.
+ * @input how many iterations the FSM has been in the current state.
+ * @return SUCCESS if there is a party available, ERROR otherwise.
+ * TODO: the return value scenarios should be changed to ERROR if there was an actual ERROR with the
+ * endpoint and TIMEOUT if there weren't any available parties.
+*/
 
 int GetAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_state) {
   oled.clear();
@@ -336,6 +371,17 @@ int GetAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_stat
   return ERROR;
 }
 
+/*
+ * This state is called in the initial Buzzer setup to see whether or not the Buzzer is registered
+ * with the backend.
+ *
+ * @input how long the FSM has been in the current state.
+ * @input how many iterations the FSM has been in the current state.
+ * @return SUCCESS if the Buzzer is registered, ERROR otherwise.
+ * TODO: the above should be changed so that ERROR is returned if an actual ERROR with the API
+ * occurs, and TIMEOUT if the buzzer isn't registered.
+*/
+
 int CheckBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_state) {
   oled.clear();
   OLED_PRINTLN_FLASH("Checking if this\nbuzzer is registered");
@@ -348,6 +394,18 @@ int CheckBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_sta
   }
   return ERROR;
 }
+
+/*
+ * If the Buzzer isn't registered, this state is called to wait for the Buzzer to be registered
+ * before preceeding to normal Buzzer activities.
+ *
+ * @input how long the FSM has been in the current state.
+ * @input how many iterations the FSM has been in the current state.
+ * @return SUCCESS once the Buzzer has been registered, REPEAT if the Buzzer has yet to be
+ * registered.
+ * TODO: the above should be changed so that ERROR is returned if an actual ERROR with the API
+ * occurs.
+*/
 
 int WaitBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_state) {
   oled.clear();
@@ -362,6 +420,20 @@ int WaitBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_stat
   delay(5000);
   return SUCCESS;
 }
+
+/*
+ * This state runs when then Buzzer should buzz. It vibrates the motor for 2 seconds then pings the
+ * API to see whether or not it should keep buzzing or return to IDLE. This API interaction is
+ * likely to change in the near future. API pinging takes ~5 seconds so no delay call is needed
+ * before buzzing again.
+ *
+ * @input how long the FSM has been in the current state.
+ * @input how many iterations the FSM has been in the current state.
+ * @return SUCCESS if the party is no longer active (has been deleted or party has been seated),
+ * or REPEAT if we should keep buzzing.
+ * TODO: the above should be changed so that ERROR is returned if an actual ERROR with the API
+ * occurs.
+*/
 
 int BuzzFunc(unsigned long state_start_time, int num_iterations_in_state) {
   oled.clear();
