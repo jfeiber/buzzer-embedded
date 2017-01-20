@@ -1,3 +1,11 @@
+/*
+  File:
+  Globals.h
+
+  Description:
+  Contains all the global variables/defines used by Buzzer.
+*/
+
 #ifndef GLOBALS_H
 #define GLOBALS_H
 

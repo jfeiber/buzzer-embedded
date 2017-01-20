@@ -1,3 +1,11 @@
+/*
+  File:
+  Pins.h
+
+  Description:
+  Defines for the various peripheral pins. 
+ */
+
 #ifndef PINS_H
 #define PINS_H
 

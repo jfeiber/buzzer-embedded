@@ -1,6 +1,3 @@
-#ifndef HELPERS_H
-#define HELPERS_H
-
 /*
   File:
   Helpers.h
@@ -8,7 +5,10 @@
   Description:
   Contains various helper methods/macros that are useful in the project.
 
- */
+*/
+
+#ifndef HELPERS_H
+#define HELPERS_H
 
 #include <EEPROM.h>
 #include <Arduino.h>
@@ -55,7 +55,7 @@ inline unsigned long get_button_press_duration(unsigned long button_press_start)
 
 /*
  * Prints the space between the heap break and stack end, which basically amounts to how much SRAM
- * is left. 
+ * is left.
 */
 
 inline void PrintFreeRAM() {
