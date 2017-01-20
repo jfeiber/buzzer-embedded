@@ -12,7 +12,7 @@
 
 // Corresponds to how much weight battery voltage samples are given in the filter. A higher
 // shift here corresponds to lower weight.
-#define LPF_FILTER_SHIFT 8
+#define LPF_FILTER_SHIFT 7
 
 static signed long filter = 0;
 
