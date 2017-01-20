@@ -163,10 +163,13 @@ int FonaShield::HTTPPOSTOneLine(FlashStrPtr URL, char *post_data_buffer, int pos
 */
 
 bool FonaShield::sendHTTPDataCheckReply(char *post_data_buffer, int post_data_buffer_len) {
-  char buf[BUF_LENGTH_LARGE];
   // the 1000 represents how long in ms the cell radio will wait for more bytes of the POST data
   // before moving on.
-  sprintf_P(buf, (prog_char *)F("AT+HTTPDATA=%d,1000"), post_data_buffer_len);
+  FlashStrPtr command_skeleton = F("AT+HTTPDATA=%d,1000");
+  int num_digits_post_data_buf_len = NUM_DIGITS(post_data_buffer_len);
+  // -2 because the format specifier won't who up in the actual buf
+  char buf[strlen_P((prog_char *)command_skeleton)-2+num_digits_post_data_buf_len+1];
+  snprintf_P(buf, sizeof(buf), (prog_char *)command_skeleton, post_data_buffer_len);
   DEBUG_PRINT_FLASH("Sent: ");
   DEBUG_PRINTLN(buf);
   _fona_serial->println(buf);
@@ -354,7 +357,7 @@ bool FonaShield::sendATCommandParamCheckReply(FlashStrPtr at_command, FlashStrPt
 
 bool FonaShield::sendATCommandCheckAck(FlashStrPtr command, unsigned long timeout) {
   sendATCommand(command);
-  char rep_buffer[BUF_LENGTH_LARGE];
+  char rep_buffer[BUF_LENGTH_SMALL];
   return readAvailBytesFromSerial(rep_buffer, sizeof(rep_buffer), timeout);
 }
 
@@ -372,7 +375,7 @@ bool FonaShield::sendATCommandCheckAck(FlashStrPtr command, unsigned long timeou
 */
 
 bool FonaShield::checkATCommandReply(FlashStrPtr expected_reply, unsigned long timeout) {
-  char rep_buffer[BUF_LENGTH_LARGE];
+  char rep_buffer[BUF_LENGTH_MEDIUM];
   readAvailBytesFromSerial(rep_buffer, sizeof(rep_buffer), timeout);
   return isEqual(rep_buffer, expected_reply);
 }

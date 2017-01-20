@@ -329,7 +329,7 @@ int AcceptAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_s
   char rep_buf[BUF_LENGTH_SMALL];
   FlashStrPtr json_skeleton = F("{\""BUZZER_NAME_FIELD"\":\"%s\",\""PARTY_ID_FIELD"\":%d}");
   // calculate the number of digits in the current party_id
-  int num_digits = floor(log10(abs(party_id))) + 1;
+  int num_digits = NUM_DIGITS(party_id);
   // -4 is because the string format specifiers won't actually be in the final char buf.
   char post_data[strlen_P((prog_char *)json_skeleton)+strlen(buzzer_name_global)+num_digits+1];
   snprintf_P(post_data, sizeof(post_data), (prog_char *)json_skeleton, buzzer_name_global, party_id);
