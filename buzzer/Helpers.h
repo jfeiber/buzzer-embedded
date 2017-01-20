@@ -1,3 +1,12 @@
+/*
+  File:
+  Helpers.h
+
+  Description:
+  Contains various helper methods/macros that are useful in the project.
+
+*/
+
 #ifndef HELPERS_H
 #define HELPERS_H
 
@@ -15,9 +24,12 @@
 
 #define NUM_DIGITS(x) ((x == 0) ? 1 : floor(log10(abs(x))) + 1)
 
-
 typedef char PROGMEM prog_char;
 typedef const __FlashStringHelper * FlashStrPtr;
+
+/*
+ * Clears the EEPROM when called.
+*/
 
 inline void ClearEEPROM() {
   for (int i=0; i<EEPROM.length(); i++) {
@@ -25,10 +37,26 @@ inline void ClearEEPROM() {
   }
 }
 
+/*
+ * Given a start time of when the button was pressed (in ms), this method returns how long (in ms)
+ * the button was pressed for.
+ *
+ * millis() will overflow after the arduino has been running for ~30 minutes so we need to take that
+ * into account.
+ *
+ * @param the start time (in ms) that the button was pressed.
+ * @return how long the button was pressed in ms.
+*/
+
 inline unsigned long get_button_press_duration(unsigned long button_press_start) {
   if (millis() >= button_press_start) return millis()-button_press_start;
   else return (ULONG_MAX - button_press_start) + millis();
 }
+
+/*
+ * Prints the space between the heap break and stack end, which basically amounts to how much SRAM
+ * is left.
+*/
 
 inline void PrintFreeRAM() {
   extern int __heap_start, *__brkval;

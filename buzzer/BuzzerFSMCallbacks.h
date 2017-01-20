@@ -1,3 +1,12 @@
+/*
+  File:
+  BuzzerFSMCallbacks.h
+
+  Description:
+  Contains all the functions that represent the work a state needs to perform. Called by
+  BuzzerFSM::DoState.
+*/
+
 #ifndef BUZZERFSMCALLBACKS_H
 #define BUZZERFSMCALLBACKS_H
 

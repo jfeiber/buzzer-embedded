@@ -1,8 +1,14 @@
+/*
+  File:
+  LPF.h
+
+  Description:
+  Methods for implementing a low pass filter.
+  Implementation from :  http://webcache.googleusercontent.com/search?q=cache:MoOD_M0gNtMJ:www.edn.com/design/systems-design/4320010/A-simple-software-lowpass-filter-suits-embedded-system-applications+&cd=8&hl=en&ct=clnk&gl=us
+*/
+
 #ifndef LPF_H
 #define LPF_H
-
-// LPF implementation from:
-// http://webcache.googleusercontent.com/search?q=cache:MoOD_M0gNtMJ:www.edn.com/design/systems-design/4320010/A-simple-software-lowpass-filter-suits-embedded-system-applications+&cd=8&hl=en&ct=clnk&gl=us
 
 // Corresponds to how much weight battery voltage samples are given in the filter. A higher
 // shift here corresponds to lower weight.
