@@ -81,7 +81,6 @@ int InitGPRSFunc(unsigned long state_start_time, int num_iterations_in_state) {
   if (num_iterations_in_state >= MAX_RETRIES) {
     oled.clear();
     OLED_PRINTLN_FLASH("Failed to initialize\nGPRS connection.");
-    //TODO: Log network statistics to serial
     delay(10000);
     return ERROR;
   }
@@ -99,7 +98,6 @@ int InitGPRSFunc(unsigned long state_start_time, int num_iterations_in_state) {
  * @input how long the FSM has been in the current state.
  * @input how many iterations the FSM has been in the current state.
  * @return SUCCESS always.
- * TODO: need to return ERROR if something went wrong with the API.
 */
 
 int GetBuzzerNameFunc(unsigned long state_start_time, int num_iterations_in_state) {
@@ -109,8 +107,7 @@ int GetBuzzerNameFunc(unsigned long state_start_time, int num_iterations_in_stat
   fona_shield.HTTPGETOneLine(F("http://restaur-anteater.herokuapp.com/buzzer_api/get_new_buzzer_name"), buf, sizeof(buf));
   StaticJsonBuffer<BUF_LENGTH_MEDIUM> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(buf);
-  //TODO: better error handling here
-  short error = root[ERROR_STATUS_FIELD];
+  if (root[ERROR_STATUS_FIELD]) return (num_iterations_in_state < MAX_RETRIES) ? REPEAT : ERROR;
   const char *buzzer_name = root[BUZZER_NAME_FIELD];
   Serial.println(buzzer_name);
   EEPROMWrite(buzzer_name, strlen(buzzer_name)+1);
@@ -172,7 +169,7 @@ int IdleFunc(unsigned long state_start_time, int num_iterations_in_state) {
 
 int ShutdownFunc(unsigned long state_start_time, int num_iterations_in_state) {
   oled.clear();
-  OLED_PRINTLN_FLASH("Shutting down.\n Bye bye!");
+  OLED_PRINTLN_FLASH("Shutting down.\nBye bye!");
   delay(5000);
   oled.clear();
   return SUCCESS;
@@ -239,17 +236,18 @@ int SleepFunc(unsigned long state_start_time, int num_iterations_in_state) {
 /*
  * Helper method that pings the API to see if a Buzzer is registered and returns whether it is.
  *
- * @return true if the Buzzer is registered, false otherwise.
+ * @input a pointer to a bool that after this function call will be true if the Buzzer is registered
+ * and false otherwise.
+ * @return 1 if an API error occurred, 0 otherwise.
 */
 
-bool IsBuzzerRegistered() {
+int IsBuzzerRegistered(bool *is_buzzer_registered) {
   char rep_buf[BUF_LENGTH_SMALL];
- //TODO: better error handling
   APIPOSTBuzzerName(F("http://restaur-anteater.herokuapp.com/buzzer_api/is_buzzer_registered"), rep_buf, sizeof(rep_buf), false);
   StaticJsonBuffer<BUF_LENGTH_SMALL> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(rep_buf);
-  short is_buzzer_registered = root[IS_BUZZER_REGISTERED_FIELD];
-  return is_buzzer_registered;
+  *is_buzzer_registered = root[IS_BUZZER_REGISTERED_FIELD];
+  return root[ERROR_STATUS_FIELD];
 }
 
 /*
@@ -278,8 +276,9 @@ int APIPOSTBuzzerName(FlashStrPtr api_endpoint, char *rep_buf, int rep_buf_len, 
  *
  * @input how long the FSM has been in the current state.
  * @input how many iterations the FSM has been in the current state.
- * @return SUCCESS if the Buzzer should buzz, REPEAT if the state should be repeated, or TIMEOUT
- * if the party was deleted (is_active is false).
+ * @return SUCCESS if the Buzzer should buzz, REPEAT if the state should be repeated, TIMEOUT
+ * if the party was deleted (is_active is false), or ERROR if the API call has failed more than
+ * MAX_RETRIES number of times.
 */
 
 int HeartbeatFunc(unsigned long state_start_time, int num_iterations_in_state) {
@@ -299,7 +298,6 @@ int HeartbeatFunc(unsigned long state_start_time, int num_iterations_in_state) {
   UpdateBatteryPercentage(4, num_iterations_in_state);
   PrintFreeRAM();
   char rep_buf[BUF_LENGTH_MEDIUM];
- //TODO: better error handling
   PrintFreeRAM();
   APIPOSTBuzzerName(F("http://restaur-anteater.herokuapp.com/buzzer_api/heartbeat"), rep_buf, sizeof(rep_buf), false);
   PrintFreeRAM();
@@ -307,7 +305,7 @@ int HeartbeatFunc(unsigned long state_start_time, int num_iterations_in_state) {
   JsonObject& root = jsonBuffer.parseObject(rep_buf);
   PrintFreeRAM();
   short err = root[ERROR_STATUS_FIELD];
-  if (err) return REPEAT;
+  if (err) return ERROR;
   short is_active = root[IS_ACTIVE_FIELD];
   if (!is_active) return TIMEOUT;
   short buzz = root[BUZZ_FIELD];
@@ -337,8 +335,8 @@ int AcceptAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_s
   StaticJsonBuffer<BUF_LENGTH_SMALL> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(rep_buf);
   short err = root[ERROR_STATUS_FIELD];
-  if (!err) return SUCCESS;
-  return ERROR;
+  if (err) return (num_iterations_in_state < MAX_RETRIES) ? REPEAT : ERROR;
+  return SUCCESS;
 }
 
 /*
@@ -347,9 +345,8 @@ int AcceptAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_s
  *
  * @input how long the FSM has been in the current state.
  * @input how many iterations the FSM has been in the current state.
- * @return SUCCESS if there is a party available, ERROR otherwise.
- * TODO: the return value scenarios should be changed to ERROR if there was an actual ERROR with the
- * endpoint and TIMEOUT if there weren't any available parties.
+ * @return SUCCESS if there is a party available, TIMEOUT if there isn't, and ERROR if the API call
+ * fails more than MAX_RETRIES number of times.
 */
 
 int GetAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_state) {
@@ -361,6 +358,7 @@ int GetAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_stat
   APIPOSTBuzzerName(F("http://restaur-anteater.herokuapp.com/buzzer_api/get_available_party"), rep_buf, sizeof(rep_buf), false);
   StaticJsonBuffer<BUF_LENGTH_LARGE> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(rep_buf);
+  if (root[ERROR_STATUS_FIELD]) return (num_iterations_in_state < MAX_RETRIES) ? REPEAT : ERROR;
   bool party_avail = root[PARTY_AVAIL_FIELD];
   if (party_avail){
     wait_time = root[PARTY_WAIT_TIME_FIELD];
@@ -372,7 +370,7 @@ int GetAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_stat
   oled.clear();
   OLED_PRINTLN_FLASH("No avail parties.");
   delay(5000);
-  return ERROR;
+  return TIMEOUT;
 }
 
 /*
@@ -381,22 +379,24 @@ int GetAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_stat
  *
  * @input how long the FSM has been in the current state.
  * @input how many iterations the FSM has been in the current state.
- * @return SUCCESS if the Buzzer is registered, ERROR otherwise.
- * TODO: the above should be changed so that ERROR is returned if an actual ERROR with the API
- * occurs, and TIMEOUT if the buzzer isn't registered.
+ * @return SUCCESS if the Buzzer is registered, TIMEOUT if it isn't, and ERROR if the API call has
+ * failed more than MAX_RETRIES number of times.
 */
 
 int CheckBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_state) {
   oled.clear();
   OLED_PRINTLN_FLASH("Checking if this\nbuzzer is registered");
 
-  if (IsBuzzerRegistered()) {
+  bool is_buzzer_registered;
+  if (IsBuzzerRegistered(&is_buzzer_registered))
+    return (num_iterations_in_state < MAX_RETRIES) ? REPEAT : ERROR;
+  if (is_buzzer_registered) {
     oled.clear();
     OLED_PRINTLN_FLASH("Buzzer registered!");
     delay(2000);
     return SUCCESS;
   }
-  return ERROR;
+  return TIMEOUT;
 }
 
 /*
@@ -406,9 +406,8 @@ int CheckBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_sta
  * @input how long the FSM has been in the current state.
  * @input how many iterations the FSM has been in the current state.
  * @return SUCCESS once the Buzzer has been registered, REPEAT if the Buzzer has yet to be
- * registered.
- * TODO: the above should be changed so that ERROR is returned if an actual ERROR with the API
- * occurs.
+ * registered (or there is a problem with the API call), ERROR if the API call has failed more than
+ * MAX_RETRIES number of times.
 */
 
 int WaitBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_state) {
@@ -417,11 +416,38 @@ int WaitBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_stat
   OLED_PRINTLN_FLASH("buzzer.");
   OLED_PRINTLN_FLASH("Buzzer name: ");
   oled.println(buzzer_name_global);
-  if (!IsBuzzerRegistered()) return REPEAT;
+  bool is_buzzer_registered;
+  if (IsBuzzerRegistered(&is_buzzer_registered))
+    return (num_iterations_in_state < MAX_RETRIES) ? REPEAT : ERROR;
+  if (!is_buzzer_registered) return REPEAT;
   oled.clear();
   OLED_PRINTLN_FLASH("Buzzer successfully");
   OLED_PRINTLN_FLASH("registered!");
   delay(5000);
+  return SUCCESS;
+}
+
+/*
+ * This function gets called when an unrecoverable/fatal error has occured.
+ *
+ * @input how long the FSM has been in the current state.
+ * @input how many iterations the FSM has been in the current state.
+ * @return SUCCESS always.
+*/
+
+
+int FatalErrorFunc(unsigned long state_start_time, int num_iterations_in_state) {
+  oled.clear();
+  analogWrite(BUZZER_PIN, 255);
+  delay(300);
+  analogWrite(BUZZER_PIN, 0);
+  delay(300);
+  analogWrite(BUZZER_PIN, 255);
+  delay(300);
+  analogWrite(BUZZER_PIN, 0);
+  OLED_PRINTLN_FLASH("Fatal error occured.");
+  OLED_PRINTLN_FLASH("Restarting buzzer in\n10 seconds.");
+  delay(10000);
   return SUCCESS;
 }
 
@@ -434,9 +460,8 @@ int WaitBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_stat
  * @input how long the FSM has been in the current state.
  * @input how many iterations the FSM has been in the current state.
  * @return SUCCESS if the party is no longer active (has been deleted or party has been seated),
- * or REPEAT if we should keep buzzing.
- * TODO: the above should be changed so that ERROR is returned if an actual ERROR with the API
- * occurs.
+ * REPEAT if we should keep buzzing (or if an API error has occurred), or ERROR if the API call has
+ * failed more than MAX_RETRIES number of times.
 */
 
 int BuzzFunc(unsigned long state_start_time, int num_iterations_in_state) {
@@ -446,7 +471,6 @@ int BuzzFunc(unsigned long state_start_time, int num_iterations_in_state) {
   delay(2000);
   analogWrite(BUZZER_PIN, 0);
   char rep_buf[BUF_LENGTH_MEDIUM];
- //TODO: better error handling
   APIPOSTBuzzerName(F("http://restaur-anteater.herokuapp.com/buzzer_api/heartbeat"), rep_buf, sizeof(rep_buf), true);
   StaticJsonBuffer<BUF_LENGTH_MEDIUM> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(rep_buf);

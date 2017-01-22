@@ -32,32 +32,32 @@ unsigned long last_batt_update = 0;
 bool usb_cabled_plugged_in = false;
 
 /*
-  * Adds all states to the Buzzer FSM.
+ * Adds all states to the Buzzer FSM.
 */
 
 void init_fsm() {
-  //TODO: there needs to be a "catastrophic" error state to go into
   buzzer_fsm.AddState({INIT_GPRS, INIT, INIT, InitFonaShieldFunc}, INIT_FONA);
   int init_gprs_next_state = CHECK_BUZZER_REGISTRATION;
   if (strlen(buzzer_name_global) == 0 || buzzer_name_global[0] == 0xFFFFFFFF) init_gprs_next_state = GET_BUZZER_NAME;
   buzzer_fsm.AddState({init_gprs_next_state, INIT, INIT, InitGPRSFunc}, INIT_GPRS);
-  buzzer_fsm.AddState({IDLE, WAIT_BUZZER_REGISTRATION, INIT, CheckBuzzerRegFunc}, CHECK_BUZZER_REGISTRATION);
-  buzzer_fsm.AddState({WAIT_BUZZER_REGISTRATION, INIT, INIT, GetBuzzerNameFunc}, GET_BUZZER_NAME);
-  buzzer_fsm.AddState({GET_AVAILABLE_PARTY, INIT, INIT, IdleFunc}, IDLE);
-  buzzer_fsm.AddState({IDLE, INIT, INIT, WaitBuzzerRegFunc}, WAIT_BUZZER_REGISTRATION);
-  buzzer_fsm.AddState({ACCEPT_AVAILABLE_PARTY, IDLE, INIT, GetAvailPartyFunc}, GET_AVAILABLE_PARTY);
-  buzzer_fsm.AddState({HEARTBEAT, IDLE, INIT, AcceptAvailPartyFunc}, ACCEPT_AVAILABLE_PARTY);
-  buzzer_fsm.AddState({BUZZ, INIT, IDLE, HeartbeatFunc}, HEARTBEAT);
-  buzzer_fsm.AddState({IDLE, INIT, BUZZ, BuzzFunc}, BUZZ);
-  buzzer_fsm.AddState({IDLE, INIT, INIT, WakeupFunc}, WAKEUP);
-  buzzer_fsm.AddState({SLEEP, INIT, INIT, ShutdownFunc}, SHUTDOWN);
-  buzzer_fsm.AddState({IDLE, INIT, INIT, SleepFunc}, SLEEP);
-  buzzer_fsm.AddState({IDLE, INIT, INIT, ChargeFunc}, CHARGING);
+  buzzer_fsm.AddState({IDLE, FATAL_ERROR, WAIT_BUZZER_REGISTRATION, CheckBuzzerRegFunc}, CHECK_BUZZER_REGISTRATION);
+  buzzer_fsm.AddState({WAIT_BUZZER_REGISTRATION, FATAL_ERROR, FATAL_ERROR, GetBuzzerNameFunc}, GET_BUZZER_NAME);
+  buzzer_fsm.AddState({GET_AVAILABLE_PARTY, FATAL_ERROR, FATAL_ERROR, IdleFunc}, IDLE);
+  buzzer_fsm.AddState({IDLE, FATAL_ERROR, FATAL_ERROR, WaitBuzzerRegFunc}, WAIT_BUZZER_REGISTRATION);
+  buzzer_fsm.AddState({ACCEPT_AVAILABLE_PARTY, FATAL_ERROR, IDLE, GetAvailPartyFunc}, GET_AVAILABLE_PARTY);
+  buzzer_fsm.AddState({HEARTBEAT, FATAL_ERROR, FATAL_ERROR, AcceptAvailPartyFunc}, ACCEPT_AVAILABLE_PARTY);
+  buzzer_fsm.AddState({BUZZ, FATAL_ERROR, IDLE, HeartbeatFunc}, HEARTBEAT);
+  buzzer_fsm.AddState({IDLE, FATAL_ERROR, BUZZ, BuzzFunc}, BUZZ);
+  buzzer_fsm.AddState({IDLE, FATAL_ERROR, FATAL_ERROR, WakeupFunc}, WAKEUP);
+  buzzer_fsm.AddState({SLEEP, FATAL_ERROR, FATAL_ERROR, ShutdownFunc}, SHUTDOWN);
+  buzzer_fsm.AddState({IDLE, FATAL_ERROR, FATAL_ERROR, SleepFunc}, SLEEP);
+  buzzer_fsm.AddState({IDLE, FATAL_ERROR, FATAL_ERROR, ChargeFunc}, CHARGING);
+  buzzer_fsm.AddState({INIT, INIT, INIT, FatalErrorFunc}, FATAL_ERROR);
 }
 
 /*
-  * The name of the Buzzer is stored in EEPROM. This function reads the bytes at the location
-  * where the name should be stored (0x0) and stores it in a global variable.
+ * The name of the Buzzer is stored in EEPROM. This function reads the bytes at the location
+ * where the name should be stored (0x0) and stores it in a global variable.
 */
 
 void get_buzzer_name_from_eeprom() {
@@ -67,8 +67,8 @@ void get_buzzer_name_from_eeprom() {
 }
 
 /*
-  * Buzzes the vibration motor twice. Used in the setup sequence to verify that the buzzer is
-  * working.
+ * Buzzes the vibration motor twice. Used in the setup sequence to verify that the buzzer is
+ * working.
 */
 
 void buzz_twice() {
@@ -105,9 +105,9 @@ void init_oled() {
 }
 
 /*
-  * Called on reset. Sets up the GPIO pins in the right modes, initializes the OLED, tests the
-  * vibration motor, gets the buzzer name from the EEPROM (if there is one), and Initializes
-  * the FSM.
+ * Called on reset. Sets up the GPIO pins in the right modes, initializes the OLED, tests the
+ * vibration motor, gets the buzzer name from the EEPROM (if there is one), and Initializes
+ * the FSM.
 */
 
 void setup() {
@@ -121,13 +121,13 @@ void setup() {
 }
 
 /*
-  * The core method of Buzzer. After setup has completed, this method is called repeatedly in an
-  * endless loop.
-  *
-  * This method processes the current FSM state and feeds the current battery voltage into a low
-  * pass filter (to reduce noise) every 15 seconds. If something has happened with one of the
-  * peripherals (USB cable plugged in, button pressed), this method will tell the FSM about that
-  * event.
+ * The core method of Buzzer. After setup has completed, this method is called repeatedly in an
+ * endless loop.
+ *
+ * This method processes the current FSM state and feeds the current battery voltage into a low
+ * pass filter (to reduce noise) every 15 seconds. If something has happened with one of the
+ * peripherals (USB cable plugged in, button pressed), this method will tell the FSM about that
+ * event.
 */
 
 void loop() {
