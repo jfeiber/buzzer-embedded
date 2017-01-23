@@ -48,7 +48,7 @@ void init_fsm() {
   buzzer_fsm.AddState({HEARTBEAT, FATAL_ERROR, FATAL_ERROR, AcceptAvailPartyFunc}, ACCEPT_AVAILABLE_PARTY);
   buzzer_fsm.AddState({BUZZ, FATAL_ERROR, IDLE, HeartbeatFunc}, HEARTBEAT);
   buzzer_fsm.AddState({IDLE, FATAL_ERROR, BUZZ, BuzzFunc}, BUZZ);
-  buzzer_fsm.AddState({IDLE, FATAL_ERROR, FATAL_ERROR, WakeupFunc}, WAKEUP);
+  buzzer_fsm.AddState({IDLE, INIT, FATAL_ERROR, WakeupFunc}, WAKEUP);
   buzzer_fsm.AddState({SLEEP, FATAL_ERROR, FATAL_ERROR, ShutdownFunc}, SHUTDOWN);
   buzzer_fsm.AddState({IDLE, FATAL_ERROR, FATAL_ERROR, SleepFunc}, SLEEP);
   buzzer_fsm.AddState({IDLE, FATAL_ERROR, FATAL_ERROR, ChargeFunc}, CHARGING);
@@ -87,7 +87,7 @@ void setup_pins() {
   pinMode(BUTTON_PIN, INPUT);
   pinMode(BUZZER_PIN, OUTPUT);
   // enable internal pull up resistor in arduino
-  // digitalWrite(BUTTON_PIN, HIGH);
+  digitalWrite(BUTTON_PIN, HIGH);
 }
 
 /*
@@ -167,7 +167,7 @@ void loop() {
   }
 
   // Record the start time of a button press.
-  if (digitalRead(BUTTON_PIN) == HIGH && button_press_start == 0) button_press_start = millis();
+  if (digitalRead(BUTTON_PIN) == LOW && button_press_start == 0) button_press_start = millis();
 
   // If a button press duration is longer than 5 seconds (5000 ms), poke the FSM.
   if (button_press_start != 0) {
@@ -180,7 +180,7 @@ void loop() {
   }
 
   // If it was a short button press and the button has now been released, poke the FSM.
-  if (digitalRead(BUTTON_PIN) == LOW && button_press_start != 0) {
+  if (digitalRead(BUTTON_PIN) == HIGH && button_press_start != 0) {
     unsigned long button_press_duration = get_button_press_duration(button_press_start);
     if (button_press_duration > 0 && button_press_duration < 5000) {
       DEBUG_PRINTLN_FLASH("Short button press registered.");

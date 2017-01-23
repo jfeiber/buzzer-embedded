@@ -124,10 +124,17 @@ int FonaShield::GetOneLineHTTPRes(char *http_res_buffer, int http_res_buffer_len
     if (elapsed_time > HTTP_TIMEOUT) return TIMEOUT;
   }
   int status = getHTTPStatusFromRes(at_res_buffer);
-  if (status != 200) return HTTPFail();
+  if (status != 200) {
+    Serial.println("status fail");
+    return HTTPFail();
+  }
   sendATCommand(F("AT+HTTPREAD"));
   readAvailBytesFromSerial(at_res_buffer, sizeof(at_res_buffer), 1000);
-  if (!getOneLineHTTPReplyFromRes(at_res_buffer, sizeof(at_res_buffer), http_res_buffer, http_res_buffer_len)) return HTTPFail();
+  if (!getOneLineHTTPReplyFromRes(at_res_buffer, sizeof(at_res_buffer), http_res_buffer, http_res_buffer_len)) {
+    Serial.println("failed at getOneLineHTTPReplyFromRes");
+    return HTTPFail();
+  }
+  Serial.println("didn't fail");
   return SUCCESS;
 }
 
@@ -150,7 +157,7 @@ int FonaShield::HTTPPOSTOneLine(FlashStrPtr URL, char *post_data_buffer, int pos
   if (!setHTTPParam(F("CONTENT"), F("application/json"))) return HTTPFail();
   if (!sendHTTPDataCheckReply(post_data_buffer, post_data_buffer_len)) return HTTPFail();
   if (!sendATCommandCheckReply(F("AT+HTTPACTION=1"), OK_REPLY)) return HTTPFail();
-  if (!GetOneLineHTTPRes(http_res_buffer, http_res_buffer_len)) return HTTPFail();
+  if (GetOneLineHTTPRes(http_res_buffer, http_res_buffer_len)) return HTTPFail();
   return !HTTPFail();
 }
 
