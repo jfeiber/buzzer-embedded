@@ -21,8 +21,9 @@ BuzzerFSM buzzer_fsm({INIT_FONA, INIT, INIT, InitFunc}, INIT);
 SoftwareSerial fona_serial = SoftwareSerial(FONA_TX_PIN, FONA_RX_PIN);
 FonaShield fona_shield(&fona_serial, FONA_RST_PIN);
 SSD1306AsciiAvrI2c oled;
-char buzzer_name_global[30];
-int party_id = NO_PARTY;
+// char eeprom_data.buzzer_name[30];
+// int party_id = NO_PARTY;
+EEPROMData eeprom_data;
 short wait_time = NO_PARTY;
 char party_name[20];
 short batt_percentage = 100;
@@ -38,9 +39,10 @@ bool usb_cabled_plugged_in = false;
 void init_fsm() {
   buzzer_fsm.AddState({INIT_GPRS, INIT, INIT, InitFonaShieldFunc}, INIT_FONA);
   int init_gprs_next_state = CHECK_BUZZER_REGISTRATION;
-  if (strlen(buzzer_name_global) == 0 || buzzer_name_global[0] == 0xFFFFFFFF) init_gprs_next_state = GET_BUZZER_NAME;
+  if (strlen(eeprom_data.buzzer_name) == 0 || eeprom_data.buzzer_name[0] == 0xFFFFFFFF) init_gprs_next_state = GET_BUZZER_NAME;
+  int check_buzzer_reg_next_state = (eeprom_data.curr_party_id != NO_PARTY && eeprom_data.curr_party_id != 0) ? HEARTBEAT : IDLE;
   buzzer_fsm.AddState({init_gprs_next_state, INIT, INIT, InitGPRSFunc}, INIT_GPRS);
-  buzzer_fsm.AddState({IDLE, FATAL_ERROR, WAIT_BUZZER_REGISTRATION, CheckBuzzerRegFunc}, CHECK_BUZZER_REGISTRATION);
+  buzzer_fsm.AddState({check_buzzer_reg_next_state, FATAL_ERROR, WAIT_BUZZER_REGISTRATION, CheckBuzzerRegFunc}, CHECK_BUZZER_REGISTRATION);
   buzzer_fsm.AddState({WAIT_BUZZER_REGISTRATION, FATAL_ERROR, FATAL_ERROR, GetBuzzerNameFunc}, GET_BUZZER_NAME);
   buzzer_fsm.AddState({GET_AVAILABLE_PARTY, FATAL_ERROR, FATAL_ERROR, IdleFunc}, IDLE);
   buzzer_fsm.AddState({IDLE, FATAL_ERROR, FATAL_ERROR, WaitBuzzerRegFunc}, WAIT_BUZZER_REGISTRATION);
@@ -61,9 +63,11 @@ void init_fsm() {
 */
 
 void get_buzzer_name_from_eeprom() {
-  EEPROMRead(buzzer_name_global, sizeof(buzzer_name_global));
+  // EEPROMRead(eeprom_data.buzzer_name, sizeof(eeprom_data.buzzer_name));
+  EEPROM.get(0, eeprom_data);
   DEBUG_PRINTLN_FLASH("Stored in eeprom: ");
-  DEBUG_PRINTLN(buzzer_name_global);
+  DEBUG_PRINTLN(eeprom_data.buzzer_name);
+  DEBUG_PRINTLN(eeprom_data.curr_party_id);
 }
 
 /*
@@ -82,10 +86,12 @@ void buzz_twice() {
 }
 
 void setup_pins() {
+  digitalWrite(ARDUINO_RST_PIN, HIGH);
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(FONA_RST_PIN, OUTPUT);
   pinMode(BUTTON_PIN, INPUT);
   pinMode(BUZZER_PIN, OUTPUT);
+  pinMode(ARDUINO_RST_PIN, OUTPUT);
   // enable internal pull up resistor in arduino
   digitalWrite(BUTTON_PIN, HIGH);
 }
@@ -117,6 +123,7 @@ void setup() {
   init_oled();
   buzz_twice();
   get_buzzer_name_from_eeprom();
+  if (eeprom_data.buzzer_name[0] == 0xFFFFFFFF) eeprom_data.curr_party_id = -1;
   init_fsm();
 }
 
@@ -157,14 +164,14 @@ void loop() {
   }
 
   // Poke the FSM if the the USB cable has been plugged in or unplugged.
-  if (readVcc() >= 4300 && !usb_cabled_plugged_in) {
-    usb_cabled_plugged_in = true;
-    buzzer_fsm.USBCablePluggedIn();
-  }
-  if (readVcc() < 4300 && usb_cabled_plugged_in) {
-    usb_cabled_plugged_in = false;
-    buzzer_fsm.USBCableUnplugged();
-  }
+  // if (readVcc() >= 4300 && !usb_cabled_plugged_in) {
+  //   usb_cabled_plugged_in = true;
+  //   buzzer_fsm.USBCablePluggedIn();
+  // }
+  // if (readVcc() < 4300 && usb_cabled_plugged_in) {
+  //   usb_cabled_plugged_in = false;
+  //   buzzer_fsm.USBCableUnplugged();
+  // }
 
   // Record the start time of a button press.
   if (digitalRead(BUTTON_PIN) == LOW && button_press_start == 0) button_press_start = millis();
