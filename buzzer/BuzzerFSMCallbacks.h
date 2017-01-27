@@ -24,6 +24,8 @@
 #define ERROR_STATUS_FIELD "e"
 #define ERROR_MESSAGE_FIELD "e_msg"
 
+static int iteration_err_start = 0;
+
 int InitFunc(unsigned long state_start_time, int num_iterations_in_state);
 int BuzzFunc(unsigned long state_start_time, int num_iterations_in_state);
 int InitFonaShieldFunc(unsigned long state_start_time, int num_iterations_in_state);

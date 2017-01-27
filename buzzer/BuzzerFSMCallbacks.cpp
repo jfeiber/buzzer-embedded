@@ -111,8 +111,8 @@ int GetBuzzerNameFunc(unsigned long state_start_time, int num_iterations_in_stat
   if (root[ERROR_STATUS_FIELD]) return (num_iterations_in_state < MAX_RETRIES) ? REPEAT : ERROR;
   const char *buzzer_name = root[BUZZER_NAME_FIELD];
   Serial.println(buzzer_name);
-  EEPROMWrite(buzzer_name, strlen(buzzer_name)+1);
-  strncpy(buzzer_name_global, buzzer_name, sizeof(buzzer_name_global));
+  strncpy(eeprom_data.buzzer_name, buzzer_name, sizeof(eeprom_data.buzzer_name));
+  EEPROMWrite(&eeprom_data);
   return SUCCESS;
 }
 
@@ -123,10 +123,11 @@ int GetBuzzerNameFunc(unsigned long state_start_time, int num_iterations_in_stat
  *
  * @input the OLED row the battery percentage should be displayed on.
  * @input how many iterations the FSM has been in the current state.
+ * @input the frequency that the battery info should be written.
 */
 
-void UpdateBatteryPercentage(int row, int num_iterations_in_state) {
-  if (num_iterations_in_state % 1000 == 0) {
+void UpdateBatteryPercentage(int row, int num_iterations_in_state, int update_frequency) {
+  if (num_iterations_in_state % update_frequency == 0) {
     oled.setCol(0);
     oled.setRow(row);
     oled.clearToEOL();
@@ -152,9 +153,9 @@ int IdleFunc(unsigned long state_start_time, int num_iterations_in_state) {
   if (num_iterations_in_state == 0) {
     oled.clear();
     OLED_PRINTLN_FLASH("Buzzer name:");
-    oled.println(buzzer_name_global);
+    oled.println(eeprom_data.buzzer_name);
   }
-  UpdateBatteryPercentage(2, num_iterations_in_state);
+  UpdateBatteryPercentage(2, num_iterations_in_state, 1000);
   if (millis() - state_start_time >= 20000) oled.setContrast(0);
   return REPEAT;
 }
@@ -191,7 +192,7 @@ int ChargeFunc(unsigned long state_start_time, int num_iterations_in_state) {
     oled.clear();
     OLED_PRINTLN_FLASH("Charging.....");
   }
-  UpdateBatteryPercentage(1, num_iterations_in_state);
+  UpdateBatteryPercentage(1, num_iterations_in_state, 1000);
   return REPEAT;
 }
 
@@ -245,8 +246,6 @@ int SleepFunc(unsigned long state_start_time, int num_iterations_in_state) {
 int IsBuzzerRegistered(bool *is_buzzer_registered) {
   char rep_buf[BUF_LENGTH_SMALL];
   int err = APIPOSTBuzzerName(F("http://restaur-anteater.herokuapp.com/buzzer_api/is_buzzer_registered"), rep_buf, sizeof(rep_buf), false);
-  Serial.println("API POST:");
-  Serial.println(err);
   if (err == ERROR) return ERROR;
   StaticJsonBuffer<BUF_LENGTH_SMALL> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(rep_buf);
@@ -268,10 +267,18 @@ int IsBuzzerRegistered(bool *is_buzzer_registered) {
 int APIPOSTBuzzerName(FlashStrPtr api_endpoint, char *rep_buf, int rep_buf_len, bool is_buzzing) {
   FlashStrPtr json_skeleton = F("{\""BUZZER_NAME_FIELD"\":\"%s\"}");
   // -2 because the string format specificer won't be in the char buf after the snprintf.
-  char post_data[strlen_P((prog_char *)json_skeleton)-2+strlen(buzzer_name_global)+1];
-  Serial.println(strlen_P((prog_char *)json_skeleton));
-  snprintf_P(post_data, sizeof(post_data), (prog_char *)json_skeleton, buzzer_name_global);
+  char post_data[strlen_P((prog_char *)json_skeleton)-2+strlen(eeprom_data.buzzer_name)+1];
+  snprintf_P(post_data, sizeof(post_data), (prog_char *)json_skeleton, eeprom_data.buzzer_name);
   return fona_shield.HTTPPOSTOneLine(api_endpoint, post_data, sizeof(post_data), rep_buf, rep_buf_len);
+}
+
+/*
+ * Helper method that sets the curr_party_id to NO_PARTY and updates the data stored in the EEPROM.
+*/
+
+void SetEEPROMDataNoParty() {
+  eeprom_data.curr_party_id = NO_PARTY;
+  EEPROMWrite(&eeprom_data);
 }
 
 /*
@@ -286,26 +293,34 @@ int APIPOSTBuzzerName(FlashStrPtr api_endpoint, char *rep_buf, int rep_buf_len, 
 */
 
 int HeartbeatFunc(unsigned long state_start_time, int num_iterations_in_state) {
-  if (num_iterations_in_state == 0) {
+  // If there is valid party data in the EEPROM the Buzzer will jump to this state, so we want to
+  // check that the party is still actually active before writing all the data to the OLED.
+  if (num_iterations_in_state == 1) {
     oled.clear();
     OLED_PRINTLN_FLASH("Party name:");
-    oled.println(party_name);
+    oled.println(eeprom_data.party_name);
     OLED_PRINTLN_FLASH("Expected wait time: ");
-    int wait_time_hrs = wait_time/60;
-    int wait_time_min = wait_time - wait_time_hrs*60;
+    int wait_time_hrs = eeprom_data.wait_time/60;
+    int wait_time_min = eeprom_data.wait_time - wait_time_hrs*60;
     int num_digits_hrs = wait_time_hrs < 10 ? NUM_DIGITS(wait_time_hrs) + 1 : NUM_DIGITS(wait_time_hrs);
     int num_digits_min = wait_time_min < 10 ? NUM_DIGITS(wait_time_min) + 1 : NUM_DIGITS(wait_time_min);
     char buf[num_digits_min + num_digits_hrs + 4];
     snprintf_P(buf, sizeof(buf), (prog_char *)F("%02dh:%02dm"), wait_time_hrs, wait_time_min);
     oled.println(buf);
+    // Writes the battery percentage now.
+    UpdateBatteryPercentage(4, num_iterations_in_state, 1);
   }
-  UpdateBatteryPercentage(4, num_iterations_in_state);
+  if (num_iterations_in_state != 0) UpdateBatteryPercentage(4, num_iterations_in_state, 5);
   PrintFreeRAM();
   char rep_buf[BUF_LENGTH_MEDIUM];
   PrintFreeRAM();
-  short err;
-  err = APIPOSTBuzzerName(F("http://restaur-anteater.herokuapp.com/buzzer_api/heartbeat"), rep_buf, sizeof(rep_buf), false);
-  if (err) return ERROR;
+  short err = APIPOSTBuzzerName(F("http://restaur-anteater.herokuapp.com/buzzer_api/heartbeat"), rep_buf, sizeof(rep_buf), false);
+  if (err) {
+    if (iteration_err_start >= MAX_RETRIES) return ERROR;
+    iteration_err_start++;
+    return REPEAT;
+  }
+  iteration_err_start = 0;
   PrintFreeRAM();
   StaticJsonBuffer<BUF_LENGTH_MEDIUM> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(rep_buf);
@@ -313,10 +328,12 @@ int HeartbeatFunc(unsigned long state_start_time, int num_iterations_in_state) {
   err = root[ERROR_STATUS_FIELD];
   if (err) return ERROR;
   short is_active = root[IS_ACTIVE_FIELD];
-  if (!is_active) return TIMEOUT;
+  if (!is_active) {
+    SetEEPROMDataNoParty();
+    return TIMEOUT;
+  }
   short buzz = root[BUZZ_FIELD];
   if (buzz) return SUCCESS;
-  wait_time = root[PARTY_WAIT_TIME_FIELD];
   return REPEAT;
 }
 
@@ -333,10 +350,10 @@ int AcceptAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_s
   char rep_buf[BUF_LENGTH_SMALL];
   FlashStrPtr json_skeleton = F("{\""BUZZER_NAME_FIELD"\":\"%s\",\""PARTY_ID_FIELD"\":%d}");
   // calculate the number of digits in the current party_id
-  int num_digits = NUM_DIGITS(party_id);
+  int num_digits = NUM_DIGITS(eeprom_data.curr_party_id);
   // -4 is because the string format specifiers won't actually be in the final char buf.
-  char post_data[strlen_P((prog_char *)json_skeleton)+strlen(buzzer_name_global)+num_digits+1];
-  snprintf_P(post_data, sizeof(post_data), (prog_char *)json_skeleton, buzzer_name_global, party_id);
+  char post_data[strlen_P((prog_char *)json_skeleton)+strlen(eeprom_data.buzzer_name)+num_digits+1];
+  snprintf_P(post_data, sizeof(post_data), (prog_char *)json_skeleton, eeprom_data.buzzer_name, eeprom_data.curr_party_id);
   short err;
   err = fona_shield.HTTPPOSTOneLine(F("http://restaur-anteater.herokuapp.com/buzzer_api/accept_party"), post_data, sizeof(post_data), rep_buf, sizeof(rep_buf));
   if (err) return (num_iterations_in_state < MAX_RETRIES) ? REPEAT : ERROR;
@@ -344,6 +361,8 @@ int AcceptAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_s
   JsonObject& root = jsonBuffer.parseObject(rep_buf);
   err = root[ERROR_STATUS_FIELD];
   if (err) return (num_iterations_in_state < MAX_RETRIES) ? REPEAT : ERROR;
+  // write the active party to the EEPROM
+  EEPROMWrite(&eeprom_data);
   return SUCCESS;
 }
 
@@ -370,10 +389,9 @@ int GetAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_stat
   if (root[ERROR_STATUS_FIELD]) return (num_iterations_in_state < MAX_RETRIES) ? REPEAT : ERROR;
   bool party_avail = root[PARTY_AVAIL_FIELD];
   if (party_avail){
-    wait_time = root[PARTY_WAIT_TIME_FIELD];
-    party_id = root[PARTY_ID_FIELD];
-    strncpy(party_name, root[PARTY_NAME_FIELD], sizeof(party_name)-1);
-    party_name[sizeof(party_name)-1] = '\0';
+    eeprom_data.wait_time = root[PARTY_WAIT_TIME_FIELD];
+    eeprom_data.curr_party_id = root[PARTY_ID_FIELD];
+    strncpy(eeprom_data.party_name, root[PARTY_NAME_FIELD], sizeof(eeprom_data.party_name));
     return SUCCESS;
   }
   oled.clear();
@@ -424,7 +442,7 @@ int WaitBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_stat
   OLED_PRINTLN_FLASH("Please register");
   OLED_PRINTLN_FLASH("buzzer.");
   OLED_PRINTLN_FLASH("Buzzer name: ");
-  oled.println(buzzer_name_global);
+  oled.println(eeprom_data.buzzer_name);
   bool is_buzzer_registered;
   if (IsBuzzerRegistered(&is_buzzer_registered) == ERROR)
     return (num_iterations_in_state < MAX_RETRIES) ? REPEAT : ERROR;
@@ -457,6 +475,8 @@ int FatalErrorFunc(unsigned long state_start_time, int num_iterations_in_state) 
   OLED_PRINTLN_FLASH("Fatal error occured.");
   OLED_PRINTLN_FLASH("Restarting buzzer in\n10 seconds.");
   delay(10000);
+  digitalWrite(ARDUINO_RST_PIN, LOW);
+  // This should never happen.
   return SUCCESS;
 }
 
@@ -486,8 +506,15 @@ int BuzzFunc(unsigned long state_start_time, int num_iterations_in_state) {
   StaticJsonBuffer<BUF_LENGTH_MEDIUM> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(rep_buf);
   err = root[ERROR_STATUS_FIELD];
-  if (err) return ERROR;
+  if (err) {
+    if (iteration_err_start >= MAX_RETRIES) return ERROR;
+    iteration_err_start++;
+    return REPEAT;
+  }
   short is_active = root[IS_ACTIVE_FIELD];
-  if (!is_active) return SUCCESS;
+  if (!is_active) {
+    SetEEPROMDataNoParty();
+    return SUCCESS;
+  }
   return REPEAT;
 }
