@@ -123,6 +123,7 @@ int GetBuzzerNameFunc(unsigned long state_start_time, int num_iterations_in_stat
  *
  * @input the OLED row the battery percentage should be displayed on.
  * @input how many iterations the FSM has been in the current state.
+ * @input the frequency that the battery info should be written.
 */
 
 void UpdateBatteryPercentage(int row, int num_iterations_in_state, int update_frequency) {
@@ -292,6 +293,8 @@ void SetEEPROMDataNoParty() {
 */
 
 int HeartbeatFunc(unsigned long state_start_time, int num_iterations_in_state) {
+  // If there is valid party data in the EEPROM the Buzzer will jump to this state, so we want to
+  // check that the party is still actually active before writing all the data to the OLED.
   if (num_iterations_in_state == 1) {
     oled.clear();
     OLED_PRINTLN_FLASH("Party name:");
@@ -304,6 +307,7 @@ int HeartbeatFunc(unsigned long state_start_time, int num_iterations_in_state) {
     char buf[num_digits_min + num_digits_hrs + 4];
     snprintf_P(buf, sizeof(buf), (prog_char *)F("%02dh:%02dm"), wait_time_hrs, wait_time_min);
     oled.println(buf);
+    // Writes the battery percentage now.
     UpdateBatteryPercentage(4, num_iterations_in_state, 1);
   }
   if (num_iterations_in_state != 0) UpdateBatteryPercentage(4, num_iterations_in_state, 5);
