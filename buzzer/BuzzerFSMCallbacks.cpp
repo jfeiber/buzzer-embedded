@@ -271,6 +271,10 @@ int APIPOSTBuzzerName(FlashStrPtr api_endpoint, char *rep_buf, int rep_buf_len, 
   return fona_shield.HTTPPOSTOneLine(api_endpoint, post_data, sizeof(post_data), rep_buf, rep_buf_len);
 }
 
+/*
+ * Helper method that sets the curr_party_id to NO_PARTY and updates the data stored in the EEPROM.
+*/
+
 void SetEEPROMDataNoParty() {
   eeprom_data.curr_party_id = NO_PARTY;
   EEPROMWrite(&eeprom_data);
@@ -326,7 +330,6 @@ int HeartbeatFunc(unsigned long state_start_time, int num_iterations_in_state) {
   }
   short buzz = root[BUZZ_FIELD];
   if (buzz) return SUCCESS;
-  // wait_time = root[PARTY_WAIT_TIME_FIELD];
   return REPEAT;
 }
 
@@ -385,7 +388,6 @@ int GetAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_stat
     eeprom_data.wait_time = root[PARTY_WAIT_TIME_FIELD];
     eeprom_data.curr_party_id = root[PARTY_ID_FIELD];
     strncpy(eeprom_data.party_name, root[PARTY_NAME_FIELD], sizeof(eeprom_data.party_name));
-    // eeprom_data.party_name[sizeof(eeprparty_name)-1] = '\0';
     return SUCCESS;
   }
   oled.clear();

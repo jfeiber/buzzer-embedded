@@ -64,16 +64,12 @@ inline bool EEPROMRead(char *buf, int buf_len) {
   return true;
 }
 
-inline void EEPROMWriteCurrPartyID(int curr_party_id) {
-  EEPROM.write(BASE_ADDRESS+LONGEST_BUZZER_NAME+1, curr_party_id);
-}
-
+/*
+ * Writes the EEPROMData struct to the EEPROM.
+*/
 
 inline void EEPROMWrite(EEPROMData *data) {
   EEPROM.put(BASE_ADDRESS, *data);
 }
-
-
-
 
 #endif
