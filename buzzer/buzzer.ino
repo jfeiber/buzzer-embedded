@@ -50,7 +50,7 @@ void init_fsm() {
   buzzer_fsm.AddState({HEARTBEAT, FATAL_ERROR, FATAL_ERROR, AcceptAvailPartyFunc}, ACCEPT_AVAILABLE_PARTY);
   buzzer_fsm.AddState({BUZZ, FATAL_ERROR, IDLE, HeartbeatFunc}, HEARTBEAT);
   buzzer_fsm.AddState({IDLE, FATAL_ERROR, BUZZ, BuzzFunc}, BUZZ);
-  buzzer_fsm.AddState({IDLE, INIT, FATAL_ERROR, WakeupFunc}, WAKEUP);
+  buzzer_fsm.AddState({IDLE, INIT, HEARTBEAT, WakeupFunc}, WAKEUP);
   buzzer_fsm.AddState({SLEEP, FATAL_ERROR, FATAL_ERROR, ShutdownFunc}, SHUTDOWN);
   buzzer_fsm.AddState({IDLE, FATAL_ERROR, FATAL_ERROR, SleepFunc}, SLEEP);
   buzzer_fsm.AddState({IDLE, FATAL_ERROR, FATAL_ERROR, ChargeFunc}, CHARGING);

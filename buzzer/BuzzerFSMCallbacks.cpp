@@ -212,6 +212,7 @@ int WakeupFunc(unsigned long state_start_time, int num_iterations_in_state) {
   delay(5000);
   oled.clear();
   if (has_system_been_initialized) return SUCCESS;
+  if (eeprom_data.curr_party_id != NO_PARTY) return TIMEOUT;
   return ERROR;
 }
 
