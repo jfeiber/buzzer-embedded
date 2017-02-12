@@ -361,7 +361,7 @@ int AcceptAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_s
   StaticJsonBuffer<BUF_LENGTH_SMALL> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(rep_buf);
   err = root[ERROR_STATUS_FIELD];
-  if (err) return (num_iterations_in_state < MAX_RETRIES) ? REPEAT : ERROR;
+  if (err) return TIMEOUT;
   // write the active party to the EEPROM
   EEPROMWrite(&eeprom_data);
   return SUCCESS;
