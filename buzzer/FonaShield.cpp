@@ -150,7 +150,7 @@ int FonaShield::HTTPPOSTOneLine(FlashStrPtr URL, char *post_data_buffer, int pos
   if (!setHTTPParam(F("CONTENT"), F("application/json"))) return HTTPFail();
   if (!sendHTTPDataCheckReply(post_data_buffer, post_data_buffer_len)) return HTTPFail();
   if (!sendATCommandCheckReply(F("AT+HTTPACTION=1"), OK_REPLY)) return HTTPFail();
-  if (GetOneLineHTTPRes(http_res_buffer, http_res_buffer_len)) return HTTPFail();
+  if (GetOneLineHTTPRes(http_res_buffer, http_res_buffer_len) == ERROR) return HTTPFail();
   return !HTTPFail();
 }
 
@@ -208,7 +208,7 @@ bool FonaShield::setHTTPParam(FlashStrPtr param_name, FlashStrPtr param_val) {
 int FonaShield::HTTPGETOneLine(FlashStrPtr URL, char *http_res_buffer, int http_res_buffer_len) {
   if (!HTTPInit(URL)) return HTTPFail();
   if (!sendATCommandCheckReply(F("AT+HTTPACTION=0"), OK_REPLY)) return HTTPFail();
-  if (!GetOneLineHTTPRes(http_res_buffer, http_res_buffer_len)) return HTTPFail();
+  if (GetOneLineHTTPRes(http_res_buffer, http_res_buffer_len) == ERROR) return HTTPFail();
   return !HTTPFail();
 }
 
