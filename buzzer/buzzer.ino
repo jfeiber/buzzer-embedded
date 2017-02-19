@@ -55,6 +55,7 @@ void init_fsm() {
   buzzer_fsm.AddState({IDLE, FATAL_ERROR, FATAL_ERROR, SleepFunc}, SLEEP);
   buzzer_fsm.AddState({IDLE, FATAL_ERROR, FATAL_ERROR, ChargeFunc}, CHARGING);
   buzzer_fsm.AddState({INIT, INIT, INIT, FatalErrorFunc}, FATAL_ERROR);
+  buzzer_fsm.AddState({HEARTBEAT, IDLE, FATAL_ERROR, LowCellReceptionFunc}, LOW_CELL_RECEPTION);
 }
 
 /*
@@ -164,14 +165,18 @@ void loop() {
   }
 
   // Poke the FSM if the the USB cable has been plugged in or unplugged.
-  if (readVcc() >= 4300 && !usb_cabled_plugged_in) {
-    usb_cabled_plugged_in = true;
-    buzzer_fsm.USBCablePluggedIn();
-  }
-  if (readVcc() < 4300 && usb_cabled_plugged_in) {
-    usb_cabled_plugged_in = false;
-    buzzer_fsm.USBCableUnplugged();
-  }
+  // if (readVcc() >= 4300 && !usb_cabled_plugged_in) {
+  //   usb_cabled_plugged_in = true;
+  //   buzzer_fsm.USBCablePluggedIn();
+  // }
+  // if (readVcc() < 4300 && usb_cabled_plugged_in) {
+  //   usb_cabled_plugged_in = false;
+  //   buzzer_fsm.USBCableUnplugged();
+  // }
+
+  // Poke the FSM if the cell reception gets low. Might not result in a state transition if the FSM
+  // isn't in IDLE or HEARTBEAT
+  if (fona_shield.GetRSSIVal() < LOW_CELL_RECEPTION) buzzer_fsm.LowCellReception();
 
   // Record the start time of a button press.
   if (digitalRead(BUTTON_PIN) == LOW && button_press_start == 0) button_press_start = millis();

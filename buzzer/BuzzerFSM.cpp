@@ -113,6 +113,10 @@ void BuzzerFSM::ForceState(int new_state_id) {
   _curr_state_id = new_state_id;
 }
 
+void BuzzerFSM::LowCellReception() {
+  if (_curr_state_id == IDLE || _curr_state_id == HEARTBEAT) ForceState(LOW_CELL_RECEPTION);
+}
+
 /*
  * Adds a state to the FSM.
  *

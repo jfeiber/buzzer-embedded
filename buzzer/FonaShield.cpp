@@ -100,6 +100,24 @@ int FonaShield::GetBatteryVoltage() {
 }
 
 /*
+*/
+
+int FonaShield::GetRSSIVal() {
+  char csq_res_buf[BUF_LENGTH_SMALL];
+  sendATCommand(F("AT+CSQ"));
+  if (!readAvailBytesFromSerial(csq_res_buf, sizeof(csq_res_buf), 500)) return -1;
+  if (csq_res_buf == NULL) return -1;
+  char *rssi_ptr = strchr(csq_res_buf, ':');
+  if (rssi_ptr == NULL) return -1;
+  // Advance from the : to the actual number (format: CSQ: RSSI, BER)
+  rssi_ptr += 2;
+  char *rssi_end_ptr = strchr(csq_res_buf, ',');
+  if (rssi_end_ptr == NULL) return -1;
+  *rssi_end_ptr = '\0';
+  return atoi(rssi_ptr);
+}
+
+/*
  * Fills the given char buf with one line of an HTTP response. It is assumed that an HTTP request
  * of some sort was initiated before this method was called, otherwise all this method will do is
  * eventually return TIMEOUT.

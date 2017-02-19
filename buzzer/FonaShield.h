@@ -27,7 +27,7 @@
 
 // The default amount of time to wait for new bytes to be received from the cell radio before we
 // assume no new bytes are coming.
-#define AT_TIMEOUT 50
+#define AT_TIMEOUT 100
 
 // Main class that serves as the FONA 800 driver.
 class FonaShield {
@@ -60,6 +60,7 @@ class FonaShield {
     int HTTPPOSTOneLine(FlashStrPtr URL, char *post_data_buffer, int post_data_buffer_len,
                          char *http_res_buffer, int http_res_buffer_len);
     int GetBatteryVoltage();
+    int GetRSSIVal();
 };
 
 #endif

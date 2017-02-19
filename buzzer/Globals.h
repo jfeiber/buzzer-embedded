@@ -21,6 +21,7 @@
 #define BUF_LENGTH_MEDIUM 64
 #define BUF_LENGTH_SMALL 32
 #define NO_PARTY -1
+#define LOW_SIGNAL_THRESHOLD 5
 
 extern BuzzerFSM buzzer_fsm;
 extern SoftwareSerial fona_serial;

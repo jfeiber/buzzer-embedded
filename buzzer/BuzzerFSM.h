@@ -26,7 +26,7 @@ struct State {
 // enum that contains all the possible state IDs.
 enum state_ids {INIT, INIT_FONA, INIT_GPRS, GET_BUZZER_NAME, IDLE, CHECK_BUZZER_REGISTRATION,
                 WAIT_BUZZER_REGISTRATION, GET_AVAILABLE_PARTY, ACCEPT_AVAILABLE_PARTY, HEARTBEAT,
-                BUZZ, CHARGING, SHUTDOWN, SLEEP, FATAL_ERROR, WAKEUP};
+                BUZZ, CHARGING, SHUTDOWN, SLEEP, FATAL_ERROR, LOW_CELL_RECEPTION, WAKEUP};
 
 // _state_start_time is set to this after a state has been
 // transitioned to. This is not a private class variable to save space.
@@ -50,6 +50,7 @@ class BuzzerFSM {
     void LongButtonPress();
     void USBCablePluggedIn();
     void USBCableUnplugged();
+    void LowCellReception();
     BuzzerFSM(State initial_state, int initial_state_id);
     BuzzerFSM(){};
 };

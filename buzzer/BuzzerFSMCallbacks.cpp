@@ -481,6 +481,24 @@ int FatalErrorFunc(unsigned long state_start_time, int num_iterations_in_state) 
   return SUCCESS;
 }
 
+int LowCellReceptionFunc(unsigned long state_start_time, int num_iterations_in_state) {
+  oled.clear();
+  analogWrite(BUZZER_PIN, 255);
+  delay(300);
+  analogWrite(BUZZER_PIN, 0);
+  delay(300);
+  analogWrite(BUZZER_PIN, 255);
+  delay(300);
+  analogWrite(BUZZER_PIN, 0);
+  OLED_PRINTLN_FLASH("Low cell reception\n");
+  while (fona_shield.GetRSSIVal() < LOW_SIGNAL_THRESHOLD) {
+    delay(1000);
+    return REPEAT;
+  }
+  if (eeprom_data.curr_party_id != NO_PARTY) return SUCCESS;
+  return ERROR;
+}
+
 /*
  * This state runs when then Buzzer should buzz. It vibrates the motor for 2 seconds then pings the
  * API to see whether or not it should keep buzzing or return to IDLE. This API interaction is
