@@ -24,8 +24,15 @@
 #define ERROR_STATUS_FIELD "e"
 #define ERROR_MESSAGE_FIELD "e_msg"
 
-static int num_iterations_in_error = 0;
 
+// Used in states that are meant to be repeated multiple times without error. This int and the
+// corresponding macro allow a state to keep track of how many times it has errored. If a state
+// doesn't normally repeat and is only meant to be run once before transition, we can just return
+// repeat and check if num_iterations_in_state is greater than MAX_RETRIES. States that are meant to
+// be run more than once can't do that, hence this int and macro. This is a little janky as this
+// probably should be something that BuzzerFSM handles but I elected to do this as a band-aid as
+// to not add additional complications to BuzzerFSM when only a few states need to use this.
+static int num_iterations_in_error = 0;
 #define CHECK_ERR_IN_INTERATION(err, val_when_err) \
   if (err == val_when_err) { \
       if (num_iterations_in_error >= MAX_RETRIES) return ERROR; \
