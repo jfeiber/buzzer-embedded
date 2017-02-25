@@ -96,7 +96,7 @@ void BuzzerFSM::ShortButtonPress() {
 
 void BuzzerFSM::LongButtonPress() {
   if (_curr_state_id == SLEEP) ForceState(WAKEUP);
-  else ForceState(SHUTDOWN);
+  else if (_curr_state_id == IDLE) ForceState(SHUTDOWN);
 }
 
 /*
