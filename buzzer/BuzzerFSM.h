@@ -39,7 +39,7 @@ class BuzzerFSM {
     unsigned long _state_start_time = 0;
     int _num_iterations_in_state = 0;
     int _curr_state_id;
-    State _states[WAKEUP];
+    State _states[WAKEUP+1];
     int DoState();
     void TransitionToNextState(int do_state_ret_val);
     void ForceState(int new_state_id);

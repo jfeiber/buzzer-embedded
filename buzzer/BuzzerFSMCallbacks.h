@@ -24,7 +24,15 @@
 #define ERROR_STATUS_FIELD "e"
 #define ERROR_MESSAGE_FIELD "e_msg"
 
-static int iteration_err_start = 0;
+static int num_iterations_in_error = 0;
+
+#define CHECK_ERR_IN_INTERATION(err, val_when_err) \
+  if (err == val_when_err) { \
+      if (num_iterations_in_error >= MAX_RETRIES) return ERROR; \
+      num_iterations_in_error++; \
+      return REPEAT; \
+  } \
+  num_iterations_in_error = 0; \
 
 int InitFunc(unsigned long state_start_time, int num_iterations_in_state);
 int BuzzFunc(unsigned long state_start_time, int num_iterations_in_state);

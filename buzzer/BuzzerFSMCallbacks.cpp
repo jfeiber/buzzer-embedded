@@ -105,12 +105,11 @@ int GetBuzzerNameFunc(unsigned long state_start_time, int num_iterations_in_stat
   OLED_PRINTLN_FLASH("Getting a name.....");
   char buf[BUF_LENGTH_MEDIUM];
   int err = fona_shield.HTTPGETOneLine(F("http://restaur-anteater.herokuapp.com/buzzer_api/get_new_buzzer_name"), buf, sizeof(buf));
-  if (err) return (num_iterations_in_state < MAX_RETRIES) ? REPEAT : ERROR;
+  if (err == ERROR) return (num_iterations_in_state < MAX_RETRIES) ? REPEAT : ERROR;
   StaticJsonBuffer<BUF_LENGTH_MEDIUM> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(buf);
   if (root[ERROR_STATUS_FIELD]) return (num_iterations_in_state < MAX_RETRIES) ? REPEAT : ERROR;
   const char *buzzer_name = root[BUZZER_NAME_FIELD];
-  Serial.println(buzzer_name);
   strncpy(eeprom_data.buzzer_name, buzzer_name, sizeof(eeprom_data.buzzer_name));
   EEPROMWrite(&eeprom_data);
   return SUCCESS;
@@ -266,7 +265,7 @@ int IsBuzzerRegistered(bool *is_buzzer_registered) {
 */
 
 int APIPOSTBuzzerName(FlashStrPtr api_endpoint, char *rep_buf, int rep_buf_len, bool is_buzzing) {
-  FlashStrPtr json_skeleton = F("{\""BUZZER_NAME_FIELD"\":\"%s\"}");
+  FlashStrPtr json_skeleton = F("{\"" BUZZER_NAME_FIELD "\":\"%s\"}");
   // -2 because the string format specificer won't be in the char buf after the snprintf.
   char post_data[strlen_P((prog_char *)json_skeleton)-2+strlen(eeprom_data.buzzer_name)+1];
   snprintf_P(post_data, sizeof(post_data), (prog_char *)json_skeleton, eeprom_data.buzzer_name);
@@ -300,28 +299,15 @@ int HeartbeatFunc(unsigned long state_start_time, int num_iterations_in_state) {
     oled.clear();
     OLED_PRINTLN_FLASH("Party name:");
     oled.println(eeprom_data.party_name);
-    OLED_PRINTLN_FLASH("Expected wait time: ");
-    int wait_time_hrs = eeprom_data.wait_time/60;
-    int wait_time_min = eeprom_data.wait_time - wait_time_hrs*60;
-    int num_digits_hrs = wait_time_hrs < 10 ? NUM_DIGITS(wait_time_hrs) + 1 : NUM_DIGITS(wait_time_hrs);
-    int num_digits_min = wait_time_min < 10 ? NUM_DIGITS(wait_time_min) + 1 : NUM_DIGITS(wait_time_min);
-    char buf[num_digits_min + num_digits_hrs + 4];
-    snprintf_P(buf, sizeof(buf), (prog_char *)F("%02dh:%02dm"), wait_time_hrs, wait_time_min);
-    oled.println(buf);
     // Writes the battery percentage now.
-    UpdateBatteryPercentage(4, num_iterations_in_state, 1);
+    UpdateBatteryPercentage(2, num_iterations_in_state, 1);
   }
-  if (num_iterations_in_state != 0) UpdateBatteryPercentage(4, num_iterations_in_state, 5);
+  if (num_iterations_in_state != 0) UpdateBatteryPercentage(2, num_iterations_in_state, 5);
   PrintFreeRAM();
   char rep_buf[BUF_LENGTH_MEDIUM];
   PrintFreeRAM();
   short err = APIPOSTBuzzerName(F("http://restaur-anteater.herokuapp.com/buzzer_api/heartbeat"), rep_buf, sizeof(rep_buf), false);
-  if (err) {
-    if (iteration_err_start >= MAX_RETRIES) return ERROR;
-    iteration_err_start++;
-    return REPEAT;
-  }
-  iteration_err_start = 0;
+  CHECK_ERR_IN_INTERATION(err, ERROR);
   PrintFreeRAM();
   StaticJsonBuffer<BUF_LENGTH_MEDIUM> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(rep_buf);
@@ -349,7 +335,7 @@ int HeartbeatFunc(unsigned long state_start_time, int num_iterations_in_state) {
 
 int AcceptAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_state) {
   char rep_buf[BUF_LENGTH_SMALL];
-  FlashStrPtr json_skeleton = F("{\""BUZZER_NAME_FIELD"\":\"%s\",\""PARTY_ID_FIELD"\":%d}");
+  FlashStrPtr json_skeleton = F("{\"" BUZZER_NAME_FIELD "\":\"%s\",\"" PARTY_ID_FIELD "\":%d}");
   // calculate the number of digits in the current party_id
   int num_digits = NUM_DIGITS(eeprom_data.curr_party_id);
   // -4 is because the string format specifiers won't actually be in the final char buf.
@@ -357,7 +343,7 @@ int AcceptAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_s
   snprintf_P(post_data, sizeof(post_data), (prog_char *)json_skeleton, eeprom_data.buzzer_name, eeprom_data.curr_party_id);
   short err;
   err = fona_shield.HTTPPOSTOneLine(F("http://restaur-anteater.herokuapp.com/buzzer_api/accept_party"), post_data, sizeof(post_data), rep_buf, sizeof(rep_buf));
-  if (err) return (num_iterations_in_state < MAX_RETRIES) ? REPEAT : ERROR;
+  if (err == ERROR) return (num_iterations_in_state < MAX_RETRIES) ? REPEAT : ERROR;
   StaticJsonBuffer<BUF_LENGTH_SMALL> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(rep_buf);
   err = root[ERROR_STATUS_FIELD];
@@ -384,7 +370,7 @@ int GetAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_stat
   delay(100);
   char rep_buf[BUF_LENGTH_LARGE];
   int err = APIPOSTBuzzerName(F("http://restaur-anteater.herokuapp.com/buzzer_api/get_available_party"), rep_buf, sizeof(rep_buf), false);
-  if (err) return (num_iterations_in_state < MAX_RETRIES) ? REPEAT : ERROR;
+  if (err == ERROR) return (num_iterations_in_state < MAX_RETRIES) ? REPEAT : ERROR;
   StaticJsonBuffer<BUF_LENGTH_LARGE> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(rep_buf);
   if (root[ERROR_STATUS_FIELD]) return (num_iterations_in_state < MAX_RETRIES) ? REPEAT : ERROR;
@@ -414,7 +400,6 @@ int GetAvailPartyFunc(unsigned long state_start_time, int num_iterations_in_stat
 int CheckBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_state) {
   oled.clear();
   OLED_PRINTLN_FLASH("Checking if this\nbuzzer is registered");
-
   bool is_buzzer_registered;
   if (IsBuzzerRegistered(&is_buzzer_registered) == ERROR)
     return (num_iterations_in_state < MAX_RETRIES) ? REPEAT : ERROR;
@@ -463,7 +448,6 @@ int WaitBuzzerRegFunc(unsigned long state_start_time, int num_iterations_in_stat
  * @return SUCCESS always.
 */
 
-
 int FatalErrorFunc(unsigned long state_start_time, int num_iterations_in_state) {
   oled.clear();
   analogWrite(BUZZER_PIN, 255);
@@ -481,22 +465,38 @@ int FatalErrorFunc(unsigned long state_start_time, int num_iterations_in_state) 
   return SUCCESS;
 }
 
+/*
+ * This function gets called when the Buzzer no longer has acceptable cell signal (as measured
+* using the RSSI from the cell modem).
+ *
+ * @input how long the FSM has been in the current state.
+ * @input how many iterations the FSM has been in the current state.
+ * @return REPEAT if the RSSI is below the signal threshold or an error was encountered interacting
+ * with the cell modem, ERROR if we encountered an error with the cell modem too many times, SUCCESS
+ * if the Buzzer is back in cell range and we want to go to HEARTBEAT, TIMEOUT if we are back in cell
+ * range and we want to go to IDLE.
+*/
+
 int LowCellReceptionFunc(unsigned long state_start_time, int num_iterations_in_state) {
-  oled.clear();
-  analogWrite(BUZZER_PIN, 255);
-  delay(300);
-  analogWrite(BUZZER_PIN, 0);
-  delay(300);
-  analogWrite(BUZZER_PIN, 255);
-  delay(300);
-  analogWrite(BUZZER_PIN, 0);
-  OLED_PRINTLN_FLASH("Low cell reception\n");
-  while (fona_shield.GetRSSIVal() < LOW_SIGNAL_THRESHOLD) {
+  if (num_iterations_in_state == 0) {
+    oled.clear();
+    analogWrite(BUZZER_PIN, 255);
+    delay(300);
+    analogWrite(BUZZER_PIN, 0);
+    delay(300);
+    analogWrite(BUZZER_PIN, 255);
+    delay(300);
+    analogWrite(BUZZER_PIN, 0);
+    OLED_PRINTLN_FLASH("Low cell reception\n");
+  }
+  int rssi_val = fona_shield.GetRSSIVal();
+  CHECK_ERR_IN_INTERATION(rssi_val, -1);
+  if (rssi_val < LOW_SIGNAL_THRESHOLD) {
     delay(1000);
     return REPEAT;
   }
   if (eeprom_data.curr_party_id != NO_PARTY) return SUCCESS;
-  return ERROR;
+  return TIMEOUT;
 }
 
 /*
@@ -521,15 +521,11 @@ int BuzzFunc(unsigned long state_start_time, int num_iterations_in_state) {
   char rep_buf[BUF_LENGTH_MEDIUM];
   short err;
   err = APIPOSTBuzzerName(F("http://restaur-anteater.herokuapp.com/buzzer_api/heartbeat"), rep_buf, sizeof(rep_buf), true);
-  if (err) return ERROR;
+  CHECK_ERR_IN_INTERATION(err, ERROR);
   StaticJsonBuffer<BUF_LENGTH_MEDIUM> jsonBuffer;
   JsonObject& root = jsonBuffer.parseObject(rep_buf);
   err = root[ERROR_STATUS_FIELD];
-  if (err) {
-    if (iteration_err_start >= MAX_RETRIES) return ERROR;
-    iteration_err_start++;
-    return REPEAT;
-  }
+  CHECK_ERR_IN_INTERATION(err, 1);
   short is_active = root[IS_ACTIVE_FIELD];
   if (!is_active) {
     SetEEPROMDataNoParty();

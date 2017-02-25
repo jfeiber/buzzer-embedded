@@ -100,6 +100,10 @@ int FonaShield::GetBatteryVoltage() {
 }
 
 /*
+ * Returns the RSSI (received signal strength indicator, used to measure the strength of a radio
+ * signal) of the cell modem.
+ *
+ * @return the RSSI value of the cell modem, or -1 if something went wrong.
 */
 
 int FonaShield::GetRSSIVal() {
