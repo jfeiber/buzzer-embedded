@@ -114,6 +114,17 @@ void BuzzerFSM::ForceState(int new_state_id) {
 }
 
 /*
+ * Called by loop() in buzzer.ino when low cell reception has been detected.
+ *
+ * If the FSM is in the IDLE or HEARTBEAT state, this forces a transition to the LOW_CELL_RECEPTION
+ * state.
+*/
+
+void BuzzerFSM::LowCellReception() {
+  if (_curr_state_id == IDLE || _curr_state_id == HEARTBEAT) ForceState(LOW_CELL_RECEPTION);
+}
+
+/*
  * Adds a state to the FSM.
  *
  * @input a State struct that represents the state to add.

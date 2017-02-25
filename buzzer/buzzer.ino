@@ -15,6 +15,7 @@
 #include "Pins.h"
 #include "EEPROMReadWrite.h"
 #include "LPF.h"
+#include "Version.h"
 
 // Initializations of global variables definied in "Globals.h".
 BuzzerFSM buzzer_fsm({INIT_FONA, INIT, INIT, InitFunc}, INIT);
@@ -55,6 +56,7 @@ void init_fsm() {
   buzzer_fsm.AddState({IDLE, FATAL_ERROR, FATAL_ERROR, SleepFunc}, SLEEP);
   buzzer_fsm.AddState({IDLE, FATAL_ERROR, FATAL_ERROR, ChargeFunc}, CHARGING);
   buzzer_fsm.AddState({INIT, INIT, INIT, FatalErrorFunc}, FATAL_ERROR);
+  buzzer_fsm.AddState({HEARTBEAT, FATAL_ERROR, IDLE, LowCellReceptionFunc}, LOW_CELL_RECEPTION);
 }
 
 /*
@@ -63,7 +65,6 @@ void init_fsm() {
 */
 
 void get_buzzer_name_from_eeprom() {
-  // EEPROMRead(eeprom_data.buzzer_name, sizeof(eeprom_data.buzzer_name));
   EEPROM.get(0, eeprom_data);
   DEBUG_PRINTLN_FLASH("Stored in eeprom: ");
   DEBUG_PRINTLN(eeprom_data.buzzer_name);
@@ -85,6 +86,10 @@ void buzz_twice() {
   analogWrite(BUZZER_PIN, 0);
 }
 
+/*
+ * Sets up all the various peripheral pins.
+*/
+
 void setup_pins() {
   digitalWrite(ARDUINO_RST_PIN, HIGH);
   pinMode(LED_BUILTIN, OUTPUT);
@@ -92,8 +97,10 @@ void setup_pins() {
   pinMode(BUTTON_PIN, INPUT);
   pinMode(BUZZER_PIN, OUTPUT);
   pinMode(ARDUINO_RST_PIN, OUTPUT);
+  #if BOARD_TYPE == V1 || BOARD_TYPE == V2
   // enable internal pull up resistor in arduino
   digitalWrite(BUTTON_PIN, HIGH);
+  #endif
 }
 
 /*
@@ -138,7 +145,6 @@ void setup() {
 */
 
 void loop() {
-
   // Do the work of the current FSM state.
   buzzer_fsm.ProcessState();
 
@@ -173,8 +179,13 @@ void loop() {
     buzzer_fsm.USBCableUnplugged();
   }
 
+  // Poke the FSM if the cell reception gets low. Might not result in a state transition if the FSM
+  // isn't in IDLE or HEARTBEAT
+  int rssi_val = fona_shield.GetRSSIVal();
+  if (rssi_val != -1 && rssi_val < LOW_SIGNAL_THRESHOLD) buzzer_fsm.LowCellReception();
+
   // Record the start time of a button press.
-  if (digitalRead(BUTTON_PIN) == LOW && button_press_start == 0) button_press_start = millis();
+  if (digitalRead(BUTTON_PIN) == BUTTON_LOGIC_HIGH && button_press_start == 0) button_press_start = millis();
 
   // If a button press duration is longer than 5 seconds (5000 ms), poke the FSM.
   if (button_press_start != 0) {
@@ -187,7 +198,7 @@ void loop() {
   }
 
   // If it was a short button press and the button has now been released, poke the FSM.
-  if (digitalRead(BUTTON_PIN) == HIGH && button_press_start != 0) {
+  if (digitalRead(BUTTON_PIN) == BUTTON_LOGIC_LOW && button_press_start != 0) {
     unsigned long button_press_duration = get_button_press_duration(button_press_start);
     if (button_press_duration > 0 && button_press_duration < 5000) {
       DEBUG_PRINTLN_FLASH("Short button press registered.");
