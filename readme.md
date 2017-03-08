@@ -13,7 +13,7 @@ These instructions will get you a copy of the project up and running on your loc
 ### Prerequisities
 
 1. [Arduino IDE](https://www.arduino.cc/en/main/software)
-2.  Once you have the Arduino IDE installed, installed the two required libraries by going to `Sketch`->`Include Libraries`->`Manage Libraries` and search for the two required libraries and install them. [You can alternatively install them manually if that's more your game, although I don't see why you would.](https://www.arduino.cc/en/guide/libraries).
+2.  Once you have the Arduino IDE installed, install the two required libraries by going to `Sketch`->`Include Libraries`->`Manage Libraries` and search for the two required libraries and install them. [You can alternatively install them manually if that's more your game, although I don't see why you would.](https://www.arduino.cc/en/guide/libraries)
 
 ### Installing
 
